@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --bp-bg: #070709;
+  --bp-bg-2: #0b0b0f;
+  --bp-surface: rgba(255, 255, 255, 0.06);
+  --bp-surface-2: rgba(255, 255, 255, 0.09);
+  --bp-border: rgba(255, 255, 255, 0.10);
+  --bp-text: rgba(255, 255, 255, 0.92);
+  --bp-text-2: rgba(255, 255, 255, 0.72);
+  --bp-muted: rgba(255, 255, 255, 0.54);
+
+  --bp-gold: #d8b05a;
+  --bp-gold-2: #f1d28a;
+  --bp-gold-muted: rgba(216, 176, 90, 0.26);
+  --bp-shadow-gold: 0 0 0 1px rgba(216, 176, 90, 0.12),
+    0 10px 30px rgba(216, 176, 90, 0.08);
+}
+
+@theme inline {
+  --color-bp-bg: var(--bp-bg);
+  --color-bp-bg-2: var(--bp-bg-2);
+  --color-bp-surface: var(--bp-surface);
+  --color-bp-surface-2: var(--bp-surface-2);
+  --color-bp-border: var(--bp-border);
+  --color-bp-text: var(--bp-text);
+  --color-bp-text-2: var(--bp-text-2);
+  --color-bp-muted: var(--bp-muted);
+  --color-bp-gold: var(--bp-gold);
+  --color-bp-gold-2: var(--bp-gold-2);
+  --color-bp-gold-muted: var(--bp-gold-muted);
+
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-display);
+}
+
+body {
+  background: radial-gradient(
+      1200px 700px at 20% -10%,
+      rgba(216, 176, 90, 0.16),
+      transparent 55%
+    ),
+    radial-gradient(
+      1100px 800px at 100% 0%,
+      rgba(241, 210, 138, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 600px at 60% 110%,
+      rgba(216, 176, 90, 0.12),
+      transparent 55%
+    ),
+    linear-gradient(180deg, var(--bp-bg), var(--bp-bg-2));
+  color: var(--bp-text);
+}
+
+::selection {
+  background: rgba(216, 176, 90, 0.28);
+  color: rgba(255, 255, 255, 0.96);
+}
+
+* {
+  -webkit-tap-highlight-color: rgba(216, 176, 90, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}

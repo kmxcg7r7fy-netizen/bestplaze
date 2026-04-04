@@ -3,6 +3,7 @@
   "private": true,
   "description": "Point d’entrée racine : le projet Next.js est dans ./best-plaze",
   "scripts": {
+    "install:app": "npm install --prefix best-plaze",
     "dev": "npm run dev --prefix best-plaze",
     "open": "open http://127.0.0.1:3000",
     "build": "npm run build --prefix best-plaze",

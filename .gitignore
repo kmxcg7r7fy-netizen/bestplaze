@@ -1,1 +1,15 @@
-.env.local
+# Environnement & secrets
+.env
+.env.*
+!.env.example
+
+# Racine workspace
+.DS_Store
+*.log
+npm-debug.log*
+
+# Outils locaux (ne pas versionner)
+.claude/settings.local.json
+
+# Si dépendances installées à la racine par erreur
+node_modules/
