@@ -1,0 +1,12 @@
+{
+  "name": "best-plaze-workspace",
+  "private": true,
+  "description": "Point d’entrée racine : le projet Next.js est dans ./best-plaze",
+  "scripts": {
+    "dev": "npm run dev --prefix best-plaze",
+    "open": "open http://127.0.0.1:3000",
+    "build": "npm run build --prefix best-plaze",
+    "start": "npm run start --prefix best-plaze",
+    "lint": "npm run lint --prefix best-plaze"
+  }
+}

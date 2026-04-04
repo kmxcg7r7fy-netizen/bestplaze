@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep '\"\"stripe\"\"' package.json)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(/usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js run build)",
+      "Bash(find /Users/certideal/Best Plaze/best-plaze/node_modules/next/dist/docs/ -name *proxy* -o -name *middleware*)"
+    ]
+  }
+}
