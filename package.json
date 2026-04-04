@@ -4,7 +4,7 @@
   "description": "Point d’entrée racine : le projet Next.js est dans ./best-plaze",
   "scripts": {
     "install:app": "npm install --prefix best-plaze",
-    "dev": "npm run dev --prefix best-plaze",
+    "dev": "node -e \"console.log('\\n  Garde ce terminal OUVERT. Puis ouvre : http://127.0.0.1:3000\\n  (Sans serveur = erreur Connection refused dans le navigateur.)\\n')\" && npm run dev --prefix best-plaze",
     "open": "open http://127.0.0.1:3000",
     "build": "npm run build --prefix best-plaze",
     "start": "npm run start --prefix best-plaze",

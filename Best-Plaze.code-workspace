@@ -1,0 +1,33 @@
+{
+  "folders": [
+    {
+      "name": "Racine (scripts)",
+      "path": "."
+    },
+    {
+      "name": "App Next.js",
+      "path": "best-plaze"
+    }
+  ],
+  "settings": {},
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Best Plaze — serveur dev (Next.js)",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": {
+          "cwd": "${workspaceFolder:App Next.js}"
+        },
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated",
+          "focus": true
+        },
+        "group": "build"
+      }
+    ]
+  }
+}
