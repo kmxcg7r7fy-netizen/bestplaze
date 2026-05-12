@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { EventCard } from "@/components/events/EventCard";
 import { BrandMark } from "@/components/branding/BrandMark";
 import { MenuItemCard } from "@/components/menu/MenuItemCard";
@@ -54,8 +54,17 @@ export default function Home() {
             </h1>
             <p className="max-w-xl text-[15px] leading-7 text-bp-text-2">
               Lounge à Tours. Cocktails, terrasse, concerts et dancefloor.
-              56 Rue de Suède · Mar–Sam 18h–2h.
             </p>
+
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=56+Rue+de+Su%C3%A8de+Tours"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-bp-gold/20 bg-bp-gold/8 px-3 py-2 text-[13px] text-bp-text-2 transition hover:text-bp-text hover:border-bp-gold/40"
+            >
+              <MapPin className="h-4 w-4 text-bp-gold shrink-0" />
+              <span>{brand.address} · Mar–Sam 18h–2h</span>
+            </a>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button href="/reservation" className="justify-between sm:w-auto">
