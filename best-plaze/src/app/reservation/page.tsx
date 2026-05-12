@@ -41,7 +41,14 @@ export default function ReservationPage() {
         setContact({ email: data.email_contact ?? brand.email, phone: data.telephone ?? brand.phone });
       }
     }
+    async function fetchClosures() {
+      const { data } = await getBrowserSupabaseClient()
+        .from("closures")
+        .select("date");
+      if (data) setClosedDates(data.map((c: { date: string }) => c.date));
+    }
     fetchContact();
+    fetchClosures();
   }, []);
 
   const preselectOptions = useMemo(() => {
@@ -69,6 +76,7 @@ export default function ReservationPage() {
     preselected: preselectOptions.map((x) => ({ ...x, qty: 0 })),
   });
 
+  const [closedDates, setClosedDates] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +85,11 @@ export default function ReservationPage() {
 
     if (!draft.firstName || !draft.lastName || (!draft.email && !draft.phone) || !draft.dateISO || !draft.time || !draft.area) {
       setError("Veuillez remplir tous les champs obligatoires (prénom, nom, email ou téléphone, date, heure, espace).");
+      return;
+    }
+
+    if (draft.dateISO && closedDates.includes(draft.dateISO)) {
+      setError("L'établissement est fermé à cette date. Veuillez choisir une autre date.");
       return;
     }
 
@@ -154,6 +167,11 @@ export default function ReservationPage() {
                     setDraft((d) => ({ ...d, dateISO: e.target.value }))
                   }
                 />
+                {draft.dateISO && closedDates.includes(draft.dateISO) && (
+                  <p className="text-[11px] text-red-400">
+                    Établissement fermé ce jour — choisissez une autre date.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Heure</Label>

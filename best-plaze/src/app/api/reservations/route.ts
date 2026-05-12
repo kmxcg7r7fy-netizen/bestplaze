@@ -70,6 +70,55 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
+  // ── Vérification fermeture ──────────────────────────────────────────────
+  const { data: closure } = await supabase
+    .from("closures")
+    .select("id")
+    .eq("date", dateISO)
+    .maybeSingle();
+  if (closure) {
+    return NextResponse.json(
+      { error: "L'établissement est fermé à cette date. Veuillez choisir une autre date." },
+      { status: 409 }
+    );
+  }
+
+  // ── Vérification capacité ────────────────────────────────────────────────
+  const areaKey = `capacite_max_${area.trim().toLowerCase()}` as
+    | "capacite_max_lounge"
+    | "capacite_max_terrasse"
+    | "capacite_max_salle";
+
+  const { data: settings } = await supabase
+    .from("admin_settings")
+    .select("capacite_max_lounge, capacite_max_terrasse, capacite_max_salle")
+    .single();
+
+  const capaciteMax: number | null | undefined = settings?.[areaKey];
+
+  if (typeof capaciteMax === "number" && capaciteMax > 0) {
+    const { data: existing } = await supabase
+      .from("reservations")
+      .select("nb_personnes")
+      .eq("date_reservation", dateISO)
+      .eq("heure", time.trim())
+      .eq("espace", area.trim())
+      .neq("statut", "annulee");
+
+    const occupancy = (existing ?? []).reduce(
+      (sum: number, r: { nb_personnes: number }) => sum + (r.nb_personnes ?? 0),
+      0
+    );
+    if (occupancy + nb > capaciteMax) {
+      return NextResponse.json(
+        {
+          error: `Capacité insuffisante pour ce créneau (${occupancy}/${capaciteMax} places déjà réservées). Veuillez choisir un autre horaire ou espace.`,
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const insert = {
     nom: lastName.trim(),
     prenom: firstName.trim(),

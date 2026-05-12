@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BarChart3, CalendarDays, ChefHat, LogOut, Settings, Sparkles, FlaskConical,
+  BarChart3, CalendarDays, CalendarX, ChefHat, LogOut, Settings, Sparkles, FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/admin/reservations", label: "Réservations",   icon: CalendarDays,  devOnly: false },
   { href: "/admin/events",       label: "Événements",     icon: Sparkles,      devOnly: false },
   { href: "/admin/menu",         label: "Carte",          icon: ChefHat,       devOnly: false },
+  { href: "/admin/closures",     label: "Fermetures",     icon: CalendarX,     devOnly: false },
   { href: "/admin/settings",     label: "Paramètres",     icon: Settings,      devOnly: false },
   { href: "/admin/demo",         label: "Mode Démo",      icon: FlaskConical,  devOnly: true  },
 ] as const;
