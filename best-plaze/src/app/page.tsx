@@ -53,8 +53,8 @@ export default function Home() {
               </span>
             </h1>
             <p className="max-w-xl text-[15px] leading-7 text-bp-text-2">
-              Resto-Lounge à Tours. Cocktails, terrasse, concerts et dancefloor.
-              56 Rue de Suède · Mar–Jeu 12h–02h · Ven–Sam 12h–04h.
+              Lounge à Tours. Cocktails, terrasse, concerts et dancefloor.
+              56 Rue de Suède · Mar–Sam 18h–2h.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">
