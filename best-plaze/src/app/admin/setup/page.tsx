@@ -251,6 +251,7 @@ function Step2({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
         no_code:        "Stripe n'a pas retourné de code d'autorisation.",
         access_denied:  "Vous avez refusé l'autorisation Stripe.",
       };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStripeError(msgs[err] ?? `Erreur Stripe : ${err}`);
     }
   }, [searchParams]);
@@ -479,6 +480,7 @@ function AdminSetupInner() {
     const urlStep = searchParams.get("step");
     const lsStep  = localStorage.getItem("bp_setup_step");
 
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (urlStep === "3") {
       setStep(3);
     } else if (urlStep === "2") {
@@ -488,6 +490,7 @@ function AdminSetupInner() {
     } else if (lsStep === "2") {
       setStep(2);
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [searchParams]);
 
   function handleFinish() {

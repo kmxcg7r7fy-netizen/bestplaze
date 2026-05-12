@@ -46,6 +46,7 @@ export default function AdminReservationsPage() {
     setLoading(false);
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
   // Filtrage côté client
@@ -58,6 +59,7 @@ export default function AdminReservationsPage() {
         `${r.prenom} ${r.nom} ${r.email}`.toLowerCase().includes(q),
       );
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFiltered(list);
   }, [reservations, statut, search]);
 

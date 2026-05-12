@@ -9,9 +9,24 @@ import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { brand, events, menuItems } from "@/data/mock";
 
+function toDisplay(e: (typeof events)[number]) {
+  return {
+    id:          e.id,
+    title:       e.title,
+    dateISO:     e.dateISO,
+    time:        e.time,
+    type:        e.type,
+    description: e.description,
+    dressCode:   e.dressCode,
+    highlight:   e.highlight ?? false,
+    imageUrl:    e.image?.src ?? null,
+    prix:        null,
+  } as const;
+}
+
 export default function Home() {
-  const featured = events.find((e) => e.highlight) ?? events[0];
-  const nextEvents = events.filter((e) => e.id !== featured?.id).slice(0, 2);
+  const featured   = events.find((e) => e.highlight) ?? events[0];
+  const nextEvents = events.filter((e) => e.id !== featured?.id).slice(0, 2).map(toDisplay);
   const signatures = menuItems
     .filter((x) => x.category === "Cocktails" && x.id !== "ct-punch")
     .slice(0, 3);

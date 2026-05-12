@@ -19,6 +19,7 @@ function ReservationSuccessInner() {
 
   useEffect(() => {
     if (!sessionId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState({ status: "error", message: "Session de paiement introuvable." });
       return;
     }

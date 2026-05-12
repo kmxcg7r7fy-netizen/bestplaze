@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Mobile bottom nav */}
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/8 bg-black/60 backdrop-blur-xl md:hidden">
+        <div className={`fixed inset-x-0 bottom-0 z-50 border-t border-white/8 bg-black/60 backdrop-blur-xl md:hidden`}>
           <MobileAdminNav />
         </div>
 

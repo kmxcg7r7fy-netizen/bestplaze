@@ -28,29 +28,46 @@ if [ ! -d "node_modules" ]; then
 fi
 
 if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-  echo "Un serveur écoute déjà sur le port 3000."
+  echo "Un serveur écoute déjà sur le port 3000 — ouverture du navigateur."
   open "http://127.0.0.1:3000"
   exit 0
 fi
 
 echo "Démarrage de Best Plaze sur http://127.0.0.1:3000 …"
+echo "(Le premier démarrage peut prendre 20–40 s.)"
+
+# Ouvre le navigateur même si le health-check échoue (build Turbopack lent)
+( sleep 6 && open "http://127.0.0.1:3000" ) &
+OPEN_PID=$!
+
 npm run dev &
 DEV_PID=$!
 
-for _ in $(seq 1 30); do
-  CODE="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000 2>/dev/null || echo "000")"
-  if [ "$CODE" = "200" ] || [ "$CODE" = "304" ]; then
-    echo "OK — ouverture du navigateur."
-    open "http://127.0.0.1:3000"
-    echo ""
-    echo "Garde cette fenêtre ouverte. Pour arrêter le serveur : Ctrl+C"
-    wait "$DEV_PID"
-    exit 0
+# Attend que la page réponde (suivre les redirections -L)
+for _ in {1..45}; do
+  CODE="$(curl -sL -o /dev/null -w "%{http_code}" "http://127.0.0.1:3000/" 2>/dev/null || echo "000")"
+  case "$CODE" in
+    200|204|301|302|307|308)
+      echo "OK (HTTP $CODE) — ouverture du navigateur."
+      kill "$OPEN_PID" 2>/dev/null || true
+      open "http://127.0.0.1:3000"
+      echo ""
+      echo "Garde cette fenêtre ouverte. Pour arrêter : Ctrl+C"
+      wait "$DEV_PID"
+      exit 0
+      ;;
+  esac
+  if ! kill -0 "$DEV_PID" 2>/dev/null; then
+    echo "Erreur : le serveur s'est arrêté. Relance ce script ou lance « npm run dev » dans best-plaze pour voir l'erreur."
+    kill "$OPEN_PID" 2>/dev/null || true
+    read -r -p "Appuyez sur Entrée pour fermer…"
+    exit 1
   fi
   sleep 1
 done
 
-echo "Le serveur ne répond pas encore. Vérifie les messages d’erreur ci-dessus."
+echo "Délai dépassé — ouverture du navigateur quand même (recharge la page si besoin)."
+kill "$OPEN_PID" 2>/dev/null || true
 open "http://127.0.0.1:3000" 2>/dev/null || true
-echo "Attente du processus (Ctrl+C pour tout arrêter)…"
+echo "Attente du serveur (Ctrl+C pour arrêter)…"
 wait "$DEV_PID"

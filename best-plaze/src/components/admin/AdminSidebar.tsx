@@ -3,18 +3,23 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BarChart3, CalendarDays, ChefHat, LogOut, Settings, Sparkles,
+  BarChart3, CalendarDays, ChefHat, LogOut, Settings, Sparkles, FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 const navItems = [
-  { href: "/admin",              label: "Dashboard",      icon: BarChart3   },
-  { href: "/admin/reservations", label: "Réservations",   icon: CalendarDays },
-  { href: "/admin/events",       label: "Événements",     icon: Sparkles    },
-  { href: "/admin/menu",         label: "Carte",          icon: ChefHat     },
-  { href: "/admin/settings",     label: "Paramètres",     icon: Settings    },
+  { href: "/admin",              label: "Dashboard",      icon: BarChart3,     devOnly: false },
+  { href: "/admin/reservations", label: "Réservations",   icon: CalendarDays,  devOnly: false },
+  { href: "/admin/events",       label: "Événements",     icon: Sparkles,      devOnly: false },
+  { href: "/admin/menu",         label: "Carte",          icon: ChefHat,       devOnly: false },
+  { href: "/admin/settings",     label: "Paramètres",     icon: Settings,      devOnly: false },
+  { href: "/admin/demo",         label: "Mode Démo",      icon: FlaskConical,  devOnly: true  },
 ] as const;
+
+const IS_DEV = process.env.NODE_ENV !== "production";
+/** Affiche « Mode Démo » en dev, ou en prod si NEXT_PUBLIC_ADMIN_DEMO=true (rebuild requis). */
+const SHOW_DEMO = IS_DEV || process.env.NEXT_PUBLIC_ADMIN_DEMO === "true";
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -36,7 +41,7 @@ export function AdminSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Navigation admin">
-        {navItems.map((item) => {
+        {navItems.filter((item) => !item.devOnly || SHOW_DEMO).map((item) => {
           const active =
             item.href === "/admin"
               ? pathname === "/admin"

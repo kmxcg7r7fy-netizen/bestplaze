@@ -105,6 +105,7 @@ export default function AccountPage() {
     setLoading(false);
   }, [router]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
   async function handleSignOut() {

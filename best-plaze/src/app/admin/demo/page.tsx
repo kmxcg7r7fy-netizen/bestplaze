@@ -7,9 +7,11 @@ import { Card }         from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-// ─── Blocage production ───────────────────────────────────────────────────────
+// ─── Accès : dev toujours ; prod seulement si NEXT_PUBLIC_ADMIN_DEMO=true ─────
 
-const IS_PROD = process.env.NODE_ENV === "production";
+const DEMO_BLOCKED =
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PUBLIC_ADMIN_DEMO !== "true";
 
 // ─── Checklist ────────────────────────────────────────────────────────────────
 
@@ -87,12 +89,16 @@ export default function AdminDemoPage() {
     localStorage.removeItem("bp_demo_checklist");
   }
 
-  if (IS_PROD) {
+  if (DEMO_BLOCKED) {
     return (
       <div className="flex min-h-screen items-center justify-center text-center">
         <div className="space-y-4">
           <p className="font-serif text-[24px] text-bp-text">Page non disponible</p>
-          <p className="text-bp-muted">La page de démonstration n&apos;est accessible qu&apos;en développement.</p>
+          <p className="text-bp-muted max-w-md">
+            Lance l&apos;app avec <code className="text-bp-text">npm run dev</code>, ou ajoute{" "}
+            <code className="text-bp-text">NEXT_PUBLIC_ADMIN_DEMO=true</code> dans{" "}
+            <code className="text-bp-text">.env.local</code> puis rebuild (<code className="text-bp-text">npm run build</code>).
+          </p>
           <Button href="/admin" variant="secondary">Retour au dashboard</Button>
         </div>
       </div>
