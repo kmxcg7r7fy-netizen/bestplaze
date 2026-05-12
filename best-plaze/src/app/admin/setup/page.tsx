@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  User, Building2, CreditCard, Settings2,
+  User, Building2, Settings2,
   Eye, EyeOff, CheckCircle, Loader, ChevronRight, AlertCircle,
 } from "lucide-react";
 import { Button }       from "@/components/ui/Button";
@@ -13,7 +13,7 @@ import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2;
 
 // ─── Petit composant champ ────────────────────────────────────────────────────
 
@@ -38,8 +38,7 @@ function Field({
 function StepBar({ step }: { step: Step }) {
   const steps = [
     { n: 1, label: "Compte",        icon: User },
-    { n: 2, label: "Stripe",        icon: CreditCard },
-    { n: 3, label: "Configuration", icon: Settings2 },
+    { n: 2, label: "Configuration", icon: Settings2 },
   ];
   return (
     <div className="flex items-center justify-center gap-2 pb-8">
@@ -70,7 +69,7 @@ function StepBar({ step }: { step: Step }) {
 
 // ─── Étape 1 — Création du compte admin ──────────────────────────────────────
 
-function Step1({ onNext }: { onNext: (email: string) => void }) {
+function Step1({ onNext }: { onNext: () => void }) {
   const [form, setForm] = useState({
     prenom: "", nom: "", email: "", password: "", confirm: "",
     nom_etablissement: "XI BestPlaze", telephone: "", adresse: "",
@@ -142,7 +141,7 @@ function Step1({ onNext }: { onNext: (email: string) => void }) {
       // Sauvegarde l'email dans localStorage pour persistance
       localStorage.setItem("bp_setup_email", form.email.trim().toLowerCase());
       localStorage.setItem("bp_setup_step",  "2");
-      onNext(form.email.trim().toLowerCase());
+      onNext();
     } catch {
       setErrors({ _global: "Erreur réseau. Réessayez." });
       setLoading(false);
@@ -235,125 +234,14 @@ function Step1({ onNext }: { onNext: (email: string) => void }) {
   );
 }
 
-// ─── Étape 2 — Stripe Connect ─────────────────────────────────────────────────
+// ─── Étape 2 — Configuration de base ─────────────────────────────────────────
 
-function Step2({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
-  const [loading, setLoading]       = useState(false);
-  const [stripeError, setStripeError] = useState<string | null>(null);
-
-  // Vérifier si on revient de Stripe avec une erreur
-  const searchParams = useSearchParams();
-  useEffect(() => {
-    const err = searchParams.get("stripe_error");
-    if (err) {
-      const msgs: Record<string, string> = {
-        state_mismatch: "Problème de sécurité lors de la connexion Stripe. Réessayez.",
-        no_code:        "Stripe n'a pas retourné de code d'autorisation.",
-        access_denied:  "Vous avez refusé l'autorisation Stripe.",
-      };
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStripeError(msgs[err] ?? `Erreur Stripe : ${err}`);
-    }
-  }, [searchParams]);
-
-  async function handleConnect() {
-    setLoading(true);
-    try {
-      const res  = await fetch("/api/stripe/connect/authorize");
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setStripeError(data.error ?? "Impossible d'obtenir l'URL Stripe.");
-        setLoading(false);
-      }
-    } catch {
-      setStripeError("Erreur réseau. Réessayez.");
-      setLoading(false);
-    }
-  }
-
-  function handleSkip() {
-    localStorage.setItem("bp_setup_step", "3");
-    onSkip();
-  }
-
-  return (
-    <div className="space-y-6">
-      {stripeError && (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-[13px] text-red-400">
-          {stripeError}
-        </div>
-      )}
-
-      <Card className="p-6 space-y-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-bp-gold/15">
-            <CreditCard className="h-5 w-5 text-bp-gold" />
-          </div>
-          <div>
-            <p className="font-medium text-bp-text">Connectez votre compte Stripe</p>
-            <p className="text-[12px] text-bp-muted">Recevez les acomptes directement sur votre compte</p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-white/8 bg-black/20 p-4 space-y-3 text-[13px] text-bp-text-2 leading-relaxed">
-          <p>
-            Stripe est le système de paiement utilisé par votre plateforme de réservation.
-            En connectant votre compte, les acomptes versés par vos clients lors d&apos;une réservation
-            sont <strong className="text-bp-text">versés directement sur votre compte bancaire</strong>.
-          </p>
-          <p>
-            Si vous n&apos;avez pas encore de compte Stripe, ne vous inquiétez pas :
-            Stripe vous guidera pour en créer un gratuitement. Vous aurez besoin de votre
-            IBAN et d&apos;une pièce d&apos;identité.
-          </p>
-        </div>
-
-        <div className="grid gap-2 text-[12px] text-bp-muted">
-          {["Aucun abonnement requis — Stripe prend 1,4% + 0,25€ par transaction", "Virements automatiques sous 2 à 7 jours ouvrés", "Tableau de bord Stripe inclus pour suivre vos revenus"].map((txt) => (
-            <div key={txt} className="flex items-start gap-2">
-              <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-400" />
-              {txt}
-            </div>
-          ))}
-        </div>
-
-        <Button onClick={handleConnect} disabled={loading} className="w-full">
-          {loading
-            ? <><Loader className="h-4 w-4 animate-spin" /> Redirection vers Stripe…</>
-            : <><CreditCard className="h-4 w-4" /> Créer ou connecter mon compte Stripe</>
-          }
-        </Button>
-      </Card>
-
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={handleSkip}
-          className="text-[13px] text-bp-muted hover:text-bp-text-2 underline-offset-2 hover:underline transition"
-        >
-          Passer cette étape — je configurerai Stripe plus tard
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Étape 3 — Configuration de base ─────────────────────────────────────────
-
-function Step3({ onFinish }: { onFinish: () => void }) {
+function Step2({ onFinish }: { onFinish: () => void }) {
   const [form, setForm] = useState({
-    pourcentage_acompte:  30,
-    montant_min_acompte:  20,
     message_confirmation: "Votre réservation au XI BestPlaze est confirmée ! Nous avons hâte de vous accueillir.",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
-
-  // Vérifier si Stripe a bien été connecté (paramètre URL)
-  const searchParams  = useSearchParams();
-  const stripeOk      = searchParams.get("stripe_ok") === "1";
 
   async function handleFinish() {
     setLoading(true);
@@ -370,7 +258,6 @@ function Step3({ onFinish }: { onFinish: () => void }) {
         setLoading(false);
         return;
       }
-      // Nettoyer localStorage
       localStorage.removeItem("bp_setup_step");
       localStorage.removeItem("bp_setup_email");
       onFinish();
@@ -382,71 +269,18 @@ function Step3({ onFinish }: { onFinish: () => void }) {
 
   return (
     <div className="space-y-6">
-      {stripeOk && (
-        <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-[13px] text-green-400 flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Stripe connecté avec succès ! Les acomptes seront virés automatiquement.
-        </div>
-      )}
-
       {error && (
         <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-[13px] text-red-400">
           {error}
         </div>
       )}
 
-      <Card className="p-6 space-y-6">
-        <div className="flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] text-bp-muted">
-          <Settings2 className="h-3.5 w-3.5" /> Politique d&apos;acompte
-        </div>
-
-        {/* Slider acompte */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Pourcentage d&apos;acompte demandé</Label>
-            <span className="rounded-xl bg-bp-gold/15 px-3 py-1 font-serif text-[20px] text-bp-gold">
-              {form.pourcentage_acompte}%
-            </span>
-          </div>
-          <input
-            type="range"
-            min={10} max={100} step={5}
-            value={form.pourcentage_acompte}
-            onChange={(e) => setForm((f) => ({ ...f, pourcentage_acompte: parseInt(e.target.value) }))}
-            className="w-full accent-[var(--bp-gold)]"
-          />
-          <div className="flex justify-between text-[11px] text-bp-muted">
-            <span>10%</span><span>50%</span><span>100%</span>
-          </div>
-          <p className="text-[12px] text-bp-muted">
-            Pour une réservation avec 100€ de pré-sélection, l&apos;acompte sera de{" "}
-            <strong className="text-bp-text">{form.pourcentage_acompte}€</strong>.
-          </p>
-        </div>
-
-        {/* Montant minimum */}
-        <div className="space-y-1.5">
-          <Label htmlFor="min_acompte">Montant minimum d&apos;acompte (€)</Label>
-          <Input
-            id="min_acompte"
-            type="number"
-            min={0}
-            value={form.montant_min_acompte}
-            onChange={(e) => setForm((f) => ({ ...f, montant_min_acompte: parseFloat(e.target.value) || 0 }))}
-          />
-          <p className="text-[12px] text-bp-muted">
-            Appliqué quand aucun article n&apos;est pré-sélectionné.
-          </p>
-        </div>
-      </Card>
-
-      {/* Message de confirmation */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] text-bp-muted">
-          Message de confirmation
+          <Settings2 className="h-3.5 w-3.5" /> Message de confirmation
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="msg_confirm">Texte envoyé à vos clients après paiement</Label>
+          <Label htmlFor="msg_confirm">Texte envoyé à vos clients après réservation</Label>
           <textarea
             id="msg_confirm"
             rows={3}
@@ -471,27 +305,8 @@ function Step3({ onFinish }: { onFinish: () => void }) {
 
 function AdminSetupInner() {
   const router      = useRouter();
-  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>(1);
   const [done, setDone] = useState(false);
-
-  // Déterminer l'étape initiale
-  useEffect(() => {
-    const urlStep = searchParams.get("step");
-    const lsStep  = localStorage.getItem("bp_setup_step");
-
-    /* eslint-disable react-hooks/set-state-in-effect */
-    if (urlStep === "3") {
-      setStep(3);
-    } else if (urlStep === "2") {
-      setStep(2);
-    } else if (lsStep === "3") {
-      setStep(3);
-    } else if (lsStep === "2") {
-      setStep(2);
-    }
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [searchParams]);
 
   function handleFinish() {
     setDone(true);
@@ -512,30 +327,23 @@ function AdminSetupInner() {
   return (
     <div className="min-h-screen px-4 py-12">
       <div className="mx-auto max-w-xl">
-        {/* Header */}
         <div className="mb-10 text-center">
           <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold mb-3">XI BestPlaze</p>
           <h1 className="font-serif text-[32px] leading-tight text-bp-text">
             Bienvenue sur votre plateforme
           </h1>
           <p className="mt-2 text-bp-text-2">
-            Configurez votre espace en 3 étapes — cela prend moins de 5 minutes.
+            Configurez votre espace en 2 étapes — cela prend moins de 2 minutes.
           </p>
         </div>
 
         <StepBar step={step} />
 
         {step === 1 && (
-          <Step1 onNext={() => setStep(2)} />
+          <Step1 onNext={() => { localStorage.setItem("bp_setup_step", "2"); setStep(2); }} />
         )}
         {step === 2 && (
-          <Step2
-            onNext={() => { localStorage.setItem("bp_setup_step", "3"); setStep(3); }}
-            onSkip={() => setStep(3)}
-          />
-        )}
-        {step === 3 && (
-          <Step3 onFinish={handleFinish} />
+          <Step2 onFinish={handleFinish} />
         )}
       </div>
     </div>

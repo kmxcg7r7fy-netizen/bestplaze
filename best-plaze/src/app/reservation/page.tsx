@@ -59,24 +59,39 @@ export default function ReservationPage() {
   const handleConfirm = useCallback(async () => {
     setError(null);
 
-    if (!draft.firstName || !draft.lastName || !draft.email || !draft.dateISO || !draft.time || !draft.area) {
-      setError("Veuillez remplir tous les champs obligatoires (prénom, nom, email, date, heure, espace).");
+    if (!draft.firstName || !draft.lastName || (!draft.email && !draft.phone) || !draft.dateISO || !draft.time || !draft.area) {
+      setError("Veuillez remplir tous les champs obligatoires (prénom, nom, email ou téléphone, date, heure, espace).");
       return;
     }
 
+    const selectedItems = draft.preselected?.filter((x) => x.qty > 0) ?? [];
+    const totalEstimatif = selectedItems.reduce((sum, x) => sum + (x.unitPrice ?? 0) * x.qty, 0);
+
     setIsLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch("/api/reservations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft }),
+        body: JSON.stringify({
+          firstName:      draft.firstName,
+          lastName:       draft.lastName,
+          email:          draft.email ?? "",
+          phone:          draft.phone ?? "",
+          dateISO:        draft.dateISO,
+          time:           draft.time,
+          guests:         draft.guests,
+          area:           draft.area,
+          occasion:       draft.occasion !== "—" ? draft.occasion : undefined,
+          note:           draft.note,
+          totalEstimatif,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Une erreur est survenue.");
         return;
       }
-      window.location.href = data.url;
+      window.location.href = `/reservation/success?id=${data.reservation.id}`;
     } catch {
       setError("Impossible de contacter le serveur. Réessayez.");
     } finally {

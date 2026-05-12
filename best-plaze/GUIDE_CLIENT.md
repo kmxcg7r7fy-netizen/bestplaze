@@ -24,32 +24,9 @@ Cliquez sur **"Créer mon compte"**.
 
 ---
 
-### Étape 3 : Connectez votre compte Stripe
+### Étape 3 : Configurez votre établissement
 
-Stripe est le système qui gère les paiements de vos clients.
-
-Cliquez sur **"Créer ou connecter mon compte Stripe"**.
-
-**Si vous n'avez pas encore de compte Stripe :**
-Stripe va vous guider pour en créer un gratuitement. Vous aurez besoin de :
-- Une pièce d'identité (carte d'identité ou passeport)
-- Votre IBAN (numéro de compte bancaire)
-- Votre numéro SIRET
-
-**Si vous avez déjà un compte Stripe :**
-Connectez-vous simplement avec votre email et mot de passe Stripe.
-
-Après connexion, vous serez automatiquement redirigé vers la suite.
-
-> Vous pouvez passer cette étape et configurer Stripe plus tard dans **Paramètres**.
-
----
-
-### Étape 4 : Configurez votre acompte
-
-- **Pourcentage d'acompte** : choisissez le pourcentage du total que vos clients payent lors de la réservation (par défaut : 30%)
-- **Montant minimum** : le montant minimum demandé même si la pré-sélection est vide (par défaut : 20€)
-- **Message de confirmation** : le texte que recevront vos clients après paiement
+- **Message de confirmation** : le texte que recevront vos clients après avoir réservé
 
 Cliquez sur **"Terminer la configuration"**.
 
@@ -65,7 +42,6 @@ Sur le **tableau de bord** (/admin), vous voyez :
 - Le nombre de réservations du jour
 - Le nombre de personnes attendues
 - Les réservations de la semaine
-- Les revenus de la semaine
 
 ### Consulter toutes les réservations
 
@@ -80,7 +56,7 @@ Cliquez sur **"Réservations"** dans le menu.
 Depuis la liste des réservations :
 - Cliquez sur la réservation
 - Dans la fenêtre qui s'ouvre, cliquez sur le bouton correspondant :
-  - **Confirmer** : confirme la réservation
+  - **Confirmer** : confirme la réservation (le client reçoit une confirmation)
   - **Annuler** : annule la réservation
   - **Terminée** : marque comme passée
   - **No-show** : le client n'est pas venu
@@ -90,15 +66,16 @@ Depuis la liste des réservations :
 ## Ajouter un événement
 
 1. Cliquez sur **"Événements"** dans le menu
-2. Cliquez sur **"Créer un événement"**
+2. Cliquez sur **"Créer"**
 3. Remplissez les informations :
    - **Titre** : le nom de votre événement
+   - **Photo** : une image pour illustrer l'événement
    - **Description** : les détails pour vos clients
    - **Date et heure** : quand se déroule l'événement
    - **Type** : DJ Set, Afterwork, Soirée à thème, etc.
    - **Prix d'entrée** : 0 si c'est gratuit
    - **Mettre à la une** : affiche l'événement en première position sur le site
-4. Cliquez sur **"Enregistrer"**
+4. Cliquez sur **"Créer l'événement"**
 
 L'événement apparaît immédiatement sur la page publique **Événements** de votre site.
 
@@ -112,22 +89,10 @@ Dans **"Carte"** du menu, vous pouvez :
 
 ---
 
-## Recevoir vos paiements
-
-Les acomptes versés par vos clients lors d'une réservation sont **automatiquement virés sur votre compte bancaire Stripe**.
-
-- **Délai habituel** : 2 à 7 jours ouvrés
-- **Tableau de bord** : connectez-vous sur [dashboard.stripe.com](https://dashboard.stripe.com) pour suivre vos revenus
-
----
-
 ## Questions fréquentes
 
-**Un client souhaite annuler, comment rembourser ?**
-Connectez-vous sur votre tableau de bord Stripe, trouvez le paiement concerné, et cliquez sur "Rembourser".
-
-**Comment changer le pourcentage d'acompte ?**
-Dans **Paramètres** du menu admin, modifiez le champ "Acompte (%)" et cliquez sur "Enregistrer".
+**Un client souhaite annuler sa réservation ?**
+Depuis **Réservations**, trouvez la réservation et cliquez sur "Annuler".
 
 **Je ne reçois pas les emails de notification ?**
 Vérifiez vos spams. Si le problème persiste, contactez le support.
