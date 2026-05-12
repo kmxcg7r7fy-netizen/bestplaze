@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
-import { Minus, Plus, Sparkles } from "lucide-react";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { Minus, Plus, Sparkles, Phone, Mail } from "lucide-react";
 import { ReservationSummary, type ReservationDraft } from "@/components/reservation/ReservationSummary";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Label, Select, Textarea } from "@/components/ui/Input";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { menuItems } from "@/data/mock";
+import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { brand, menuItems } from "@/data/mock";
 
 const timeSlots = [
   "12:00", "12:30", "13:00", "13:30", "14:00",
@@ -28,6 +29,21 @@ function todayPlusLocal(days: number) {
 }
 
 export default function ReservationPage() {
+  const [contact, setContact] = useState({ email: brand.email, phone: brand.phone });
+
+  useEffect(() => {
+    async function fetchContact() {
+      const { data } = await getBrowserSupabaseClient()
+        .from("admin_settings")
+        .select("email_contact, telephone")
+        .single();
+      if (data) {
+        setContact({ email: data.email_contact ?? brand.email, phone: data.telephone ?? brand.phone });
+      }
+    }
+    fetchContact();
+  }, []);
+
   const preselectOptions = useMemo(() => {
     const picks = menuItems
       .filter(
@@ -106,6 +122,24 @@ export default function ReservationPage() {
         title="Réservez votre table"
         description="Choisissez votre créneau, votre espace, puis pré-sélectionnez boissons et tapas pour une expérience sans effort."
       />
+
+      {/* Encart réservations spéciales */}
+      <div className="rounded-2xl border border-bp-gold/20 bg-bp-gold/8 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[13px] font-medium text-bp-text">Réservation spéciale ?</p>
+          <p className="text-[12px] text-bp-text-2 mt-0.5">
+            Grand groupe, privatisation, événement… Contactez directement notre équipe.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 shrink-0">
+          <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-1.5 text-[12px] text-bp-text-2 hover:text-bp-text transition">
+            <Mail className="h-3.5 w-3.5 text-bp-gold/80" />{contact.email}
+          </a>
+          <a href={`tel:${contact.phone}`} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-1.5 text-[12px] text-bp-text-2 hover:text-bp-text transition">
+            <Phone className="h-3.5 w-3.5 text-bp-gold/80" />{contact.phone}
+          </a>
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_420px] lg:items-start">
         <div className="space-y-6">
