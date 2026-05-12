@@ -33,12 +33,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-white/8">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 text-[13px] text-bp-muted sm:px-6">
-          <span>© {new Date().getFullYear()} Best Plaze</span>
-          <span>V1 — maquette premium</span>
-        </div>
-      </div>
     </footer>
   );
 }
