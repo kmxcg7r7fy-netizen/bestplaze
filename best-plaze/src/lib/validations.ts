@@ -5,7 +5,7 @@ import { z } from "zod";
 export const reservationSchema = z.object({
   firstName:      z.string().min(1, "Prénom requis").max(50),
   lastName:       z.string().min(1, "Nom requis").max(50),
-  email:          z.email("Email invalide"),
+  email:          z.string().optional().or(z.literal("")),
   phone:          z.string().min(8, "Téléphone invalide").max(20).optional().or(z.literal("")),
   dateISO:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide"),
   time:           z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide"),
@@ -18,7 +18,10 @@ export const reservationSchema = z.object({
     unitPrice:  z.number().optional(),
     qty:        z.number().int().min(0).max(9),
   })).optional(),
-});
+}).refine(
+  (d) => (!!d.email && d.email.length > 0) || (!!d.phone && d.phone.length >= 8),
+  { message: "Un email ou un numéro de téléphone est requis", path: ["email"] },
+);
 
 export type ReservationInput = z.infer<typeof reservationSchema>;
 

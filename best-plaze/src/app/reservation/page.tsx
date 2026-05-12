@@ -206,7 +206,7 @@ export default function ReservationPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label>Email <span className="text-bp-muted font-normal">(ou téléphone)</span></Label>
                 <Input
                   type="email"
                   placeholder="camille@email.com"
@@ -215,13 +215,14 @@ export default function ReservationPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Téléphone</Label>
+                <Label>Téléphone <span className="text-bp-muted font-normal">(ou email)</span></Label>
                 <Input
                   inputMode="tel"
                   placeholder="+33 6 12 34 56 78"
                   value={draft.phone ?? ""}
                   onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
                 />
+                <p className="text-[11px] text-bp-muted">Au moins un des deux est requis.</p>
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>Occasion</Label>
