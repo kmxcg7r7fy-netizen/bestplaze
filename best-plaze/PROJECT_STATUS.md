@@ -1,6 +1,6 @@
 # Best Plaze — État du projet
 
-> Fichier de continuité entre sessions Claude. Mis à jour le **2026-05-11**.
+> Fichier de continuité entre sessions Claude. Mis à jour le **2026-05-12**.
 > Lis ce fichier en premier à chaque nouvelle session pour reprendre le fil.
 
 ---
@@ -81,18 +81,18 @@ Statut : ✅ fait · 🚧 en cours · ❌ à faire · 🔄 à modifier
 | # | Demande | Statut | Action concrète |
 |---|---|---|---|
 | 1 | **Supprimer totalement le paiement Stripe** | ✅ | Fait le 2026-05-12 — routes supprimées, lib supprimée, wizard 2 étapes, résa directe via /api/reservations, migration 006 (à appliquer en prod), npm uninstall stripe |
-| 2 | **Calendrier privatisation de salle + formulaire public de demande** | ❌ | Nouvelle table `privatisations` (date, contact, statut) + page `/privatisation` avec formulaire + section admin |
+| 2 | **Calendrier privatisation de salle + formulaire public de demande** | ✅ | Page `/privatisation` + API + admin `/admin/privatisations` — commité 2026-05-12 |
 | 3 | Modifier les événements depuis le compte pro | ✅ | CRUD + upload photos Supabase Storage — commité 2026-05-12 |
-| 4 | Localisation apparente | 🔄 | Adresse déjà dans le footer ; à mettre en évidence (peut-être hero ou un encart map sur la home) |
-| 5 | **Griser dates fermées (admin) + créneaux pleins (capacité) + interface admin pour gérer les fermetures** | ❌ | Nouvelle table `closures` (dates fermées) + UI admin + logique de capacité côté formulaire résa |
-| 6 | Email ou téléphone facultatif (l'un des deux) | 🔄 | Modifier `reservationSchema` dans `src/lib/validations.ts` + le formulaire |
-| 7 | Enlever le footer noir et or | 🔄 | Modifier `src/components/shell/Footer.tsx` (à retirer ou simplifier) |
-| 8 | "Pour réservations spéciales, contacter l'équipe" | 🔄 | Ajouter un encart contact dans le flux résa ou la home |
-| 9 | Horaires 18h–2h mardi-samedi, modifiables en admin | 🔄 | Mettre à jour les valeurs par défaut dans `admin_settings.horaires` (migration ou settings) — l'édition admin existe déjà |
+| 4 | Localisation apparente | ✅ | Badge adresse + lien Google Maps dans le hero — commité 2026-05-12 |
+| 5 | **Griser dates fermées (admin) + créneaux pleins (capacité) + interface admin pour gérer les fermetures** | ✅ | Table `closures` + UI admin + logique capacité côté API et formulaire — commité 2026-05-12 |
+| 6 | Email ou téléphone facultatif (l'un des deux) | ✅ | `reservationSchema` + API `/api/reservations` corrigée — 2026-05-12 |
+| 7 | Enlever le footer noir et or | ✅ | Footer simplifié en barre légère 1 ligne — 2026-05-12 |
+| 8 | "Pour réservations spéciales, contacter l'équipe" | ✅ | Encart contact ajouté dans la page `/reservation` |
+| 9 | Horaires 18h–2h mardi-samedi, modifiables en admin | ✅ | Valeurs correctes dans `brand.openingHours` + l'admin_settings est modifiable via `/admin/settings` |
 | 10 | Création de l'espace admin | ✅ | Existant et complet |
-| 11 | Sur la home, juste "Lounge" en haut (pas "Resto-Lounge") | 🔄 | Modifier `src/app/page.tsx` ligne 56 (`"Resto-Lounge à Tours…"`) |
-| 12 | Pré-remplissage du formulaire résa après clic sur un événement | ❌ | Ajouter un bouton "Réserver pour cet événement" → query params `?event=ID&date=…&time=…` consommés par `/reservation` |
-| 13 | Cocktails populaires : gérer l'entièreté du menu en admin | 🔄 | Étendre `/admin/menu` avec création / suppression / édition complète (nom, description, badge, catégorie, prix_bouteille) |
+| 11 | Sur la home, juste "Lounge" en haut (pas "Resto-Lounge") | ✅ | `brand.baseline` → "Lounge · Cocktails & Saveurs" — 2026-05-12 |
+| 12 | Pré-remplissage du formulaire résa après clic sur un événement | ✅ | Query params `?date=…&time=…&title=…` consommés par `/reservation` — commité 2026-05-12 |
+| 13 | Cocktails populaires : gérer l'entièreté du menu en admin | ✅ | CRUD complet `/admin/menu` — commité 2026-05-12 |
 
 ## 6. Risques / points à vérifier
 
