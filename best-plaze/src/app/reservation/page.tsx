@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { Minus, Plus, Sparkles, Phone, Mail } from "lucide-react";
+import { Minus, Plus, Sparkles, Phone, Mail, CalendarDays } from "lucide-react";
 import { ReservationSummary, type ReservationDraft } from "@/components/reservation/ReservationSummary";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -29,7 +29,8 @@ function todayPlusLocal(days: number) {
 }
 
 export default function ReservationPage() {
-  const [contact, setContact] = useState({ email: brand.email, phone: brand.phone });
+  const [contact, setContact]     = useState({ email: brand.email, phone: brand.phone });
+  const [eventTitle, setEventTitle] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchContact() {
@@ -47,6 +48,20 @@ export default function ReservationPage() {
         .select("date");
       if (data) setClosedDates(data.map((c: { date: string }) => c.date));
     }
+    // Pré-remplissage depuis les query params (lien depuis EventCard)
+    const params = new URLSearchParams(window.location.search);
+    const pDate  = params.get("date");
+    const pTime  = params.get("time");
+    const pTitle = params.get("title");
+    if (pDate || pTime) {
+      setDraft((d) => ({
+        ...d,
+        ...(pDate ? { dateISO: pDate } : {}),
+        ...(pTime ? { time: pTime }   : {}),
+      }));
+    }
+    if (pTitle) setEventTitle(decodeURIComponent(pTitle));
+
     fetchContact();
     fetchClosures();
   }, []);
@@ -135,6 +150,18 @@ export default function ReservationPage() {
         title="Réservez votre table"
         description="Choisissez votre créneau, votre espace, puis pré-sélectionnez boissons et tapas pour une expérience sans effort."
       />
+
+      {/* Badge pré-remplissage depuis un événement */}
+      {eventTitle && (
+        <div className="flex items-center gap-3 rounded-2xl border border-bp-gold/25 bg-bp-gold/8 px-4 py-3">
+          <CalendarDays className="h-4 w-4 text-bp-gold shrink-0" />
+          <p className="text-[13px] text-bp-text">
+            Réservation liée à l&apos;événement{" "}
+            <span className="font-medium text-bp-gold">{eventTitle}</span>
+            {" "}— date et heure pré-remplies.
+          </p>
+        </div>
+      )}
 
       {/* Encart réservations spéciales */}
       <div className="rounded-2xl border border-bp-gold/20 bg-bp-gold/8 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

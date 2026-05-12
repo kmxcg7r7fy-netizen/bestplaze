@@ -113,7 +113,7 @@ export function EventCard({
             </span>
           ) : <span />}
           <Button
-            href={`/reservation?event=${event.id}&date=${event.dateISO}&time=${event.time}`}
+            href={`/reservation?event=${event.id}&date=${event.dateISO}&time=${encodeURIComponent(event.time)}&title=${encodeURIComponent(event.title)}`}
             className="px-4 py-2.5 text-[14px]"
           >
             Réserver pour cet événement
