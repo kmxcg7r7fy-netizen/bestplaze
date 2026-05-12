@@ -62,10 +62,9 @@ export const brand = {
   phone: "07 68 62 73 19",
   email: "reservation@bestplaze.com",
   openingHours: [
-    { label: "Lundi", value: "Fermé" },
-    { label: "Mar — Jeu", value: "12:00 — 02:00" },
-    { label: "Ven — Sam", value: "12:00 — 04:00" },
-    { label: "Dim", value: "12:00 — 01:00" },
+    { label: "Lundi",    value: "Fermé" },
+    { label: "Mar — Sam", value: "18h — 2h" },
+    { label: "Dimanche", value: "Fermé" },
   ],
   social: [
     { label: "Instagram", href: "#" },
