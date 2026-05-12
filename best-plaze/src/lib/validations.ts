@@ -67,3 +67,18 @@ export const eventSchema = z.object({
 });
 
 export type EventInput = z.infer<typeof eventSchema>;
+
+// ─── Menu ────────────────────────────────────────────────────────────────────
+
+export const menuItemSchema = z.object({
+  nom:           z.string().min(1, "Nom requis").max(100),
+  description:   z.string().max(300).optional().or(z.literal("")),
+  categorie:     z.string().min(1, "Catégorie requise").max(60),
+  prix:          z.number().min(0).optional(),
+  prix_bouteille: z.number().min(0).optional(),
+  badge:         z.enum(["", "Signature", "Best-seller", "Premium", "Nouveau"]).optional(),
+  ordre:         z.number().int().min(0).default(0),
+  disponible:    z.boolean().default(true),
+});
+
+export type MenuItemInput = z.infer<typeof menuItemSchema>;
