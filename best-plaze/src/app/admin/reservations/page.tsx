@@ -65,8 +65,11 @@ export default function AdminReservationsPage() {
 
   async function changeStatut(id: string, newStatut: string) {
     setUpdating(id);
-    const supabase = getBrowserSupabaseClient();
-    await supabase.from("reservations").update({ statut: newStatut }).eq("id", id);
+    await fetch(`/api/reservations/${id}`, {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ statut: newStatut }),
+    });
     setReservations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, statut: newStatut } : r)),
     );

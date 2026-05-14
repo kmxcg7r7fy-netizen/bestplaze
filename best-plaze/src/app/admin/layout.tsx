@@ -33,17 +33,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 function MobileAdminNav() {
   // Import inline to avoid RSC issues
   return (
-    <nav className="grid grid-cols-5 px-2 py-2">
+    <nav className="grid grid-cols-6 px-2 py-2">
       {[
         { href: "/admin",              label: "Stats",    emoji: "📊" },
         { href: "/admin/reservations", label: "Résas",    emoji: "📅" },
         { href: "/admin/events",       label: "Events",   emoji: "✨" },
         { href: "/admin/menu",         label: "Carte",    emoji: "🍹" },
         { href: "/admin/settings",     label: "Config",   emoji: "⚙️"  },
+      { href: "/",                   label: "Le site",  emoji: "🌐", newTab: true },
       ].map((item) => (
         <a
           key={item.href}
           href={item.href}
+          target={"newTab" in item && item.newTab ? "_blank" : undefined}
+          rel={"newTab" in item && item.newTab ? "noopener noreferrer" : undefined}
           className="flex flex-col items-center gap-1 py-2 text-[10px] text-bp-text-2 hover:text-bp-gold"
         >
           <span className="text-[18px] leading-none">{item.emoji}</span>

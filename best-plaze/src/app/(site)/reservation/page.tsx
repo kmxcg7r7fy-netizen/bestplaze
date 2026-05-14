@@ -33,37 +33,41 @@ export default function ReservationPage() {
   const [eventTitle, setEventTitle] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchContact() {
-      const { data } = await getBrowserSupabaseClient()
-        .from("admin_settings")
-        .select("email_contact, telephone")
-        .single();
-      if (data) {
-        setContact({ email: data.email_contact ?? brand.email, phone: data.telephone ?? brand.phone });
-      }
-    }
-    async function fetchClosures() {
-      const { data } = await getBrowserSupabaseClient()
-        .from("closures")
-        .select("date");
-      if (data) setClosedDates(data.map((c: { date: string }) => c.date));
-    }
     // Pré-remplissage depuis les query params (lien depuis EventCard)
     const params = new URLSearchParams(window.location.search);
-    const pDate  = params.get("date");
-    const pTime  = params.get("time");
+    const pDate = params.get("date");
+    const pTime = params.get("time");
     const pTitle = params.get("title");
     if (pDate || pTime) {
       setDraft((d) => ({
         ...d,
         ...(pDate ? { dateISO: pDate } : {}),
-        ...(pTime ? { time: pTime }   : {}),
+        ...(pTime ? { time: pTime } : {}),
       }));
     }
     if (pTitle) setEventTitle(decodeURIComponent(pTitle));
 
-    fetchContact();
-    fetchClosures();
+    void (async () => {
+      try {
+        const sb = getBrowserSupabaseClient();
+        const { data: settings } = await sb
+          .from("admin_settings")
+          .select("email_contact, telephone")
+          .single();
+        if (settings) {
+          setContact({
+            email: settings.email_contact ?? brand.email,
+            phone: settings.telephone ?? brand.phone,
+          });
+        }
+        const { data: closures } = await sb.from("closures").select("date");
+        if (closures) {
+          setClosedDates(closures.map((c: { date: string }) => c.date));
+        }
+      } catch {
+        // Pas de .env Supabase, hors ligne, ou tables absentes : la page reste utilisable.
+      }
+    })();
   }, []);
 
   const preselectOptions = useMemo(() => {

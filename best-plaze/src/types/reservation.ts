@@ -24,7 +24,8 @@ export type ReservationRow = {
 export type CreateReservationBody = {
   firstName: string;
   lastName: string;
-  email: string;
+  /** Si vide, fournir au moins `phone` (l’API enregistre un email technique pour la base). */
+  email?: string;
   phone?: string;
   dateISO: string;
   time: string;

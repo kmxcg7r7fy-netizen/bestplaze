@@ -48,6 +48,7 @@ export default function AdminEventsPage() {
   const [form, setForm]         = useState<typeof EMPTY_FORM>(EMPTY_FORM);
   const [saving, setSaving]     = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -77,44 +78,48 @@ export default function AdminEventsPage() {
     setForm(EMPTY_FORM);
     setEditing(null);
     setFormErrors({});
+    setSaveError(null);
     setUploadProgress("idle");
     setShowForm(true);
   }
 
   function openEdit(ev: EventRow) {
+    const trimTime = (t?: string) => t ? t.slice(0, 5) : "";
     setForm({
       titre: ev.titre, description: ev.description ?? "", date: ev.date,
-      heure_debut: ev.heure_debut, heure_fin: ev.heure_fin ?? "",
+      heure_debut: trimTime(ev.heure_debut), heure_fin: trimTime(ev.heure_fin),
       type: ev.type as EventInput["type"], dress_code: ev.dress_code ?? "",
-      prix_entree: ev.prix_entree, capacite_max: ev.capacite_max,
+      prix_entree: ev.prix_entree, capacite_max: ev.capacite_max ?? undefined,
       a_la_une: ev.a_la_une, statut: ev.statut as EventInput["statut"],
       image_url: ev.image_url ?? null,
     });
     setEditing(ev.id);
     setFormErrors({});
+    setSaveError(null);
     setUploadProgress("idle");
     setShowForm(true);
   }
 
   async function handleImageUpload(file: File) {
     setUploadProgress("uploading");
-    const supabase = getBrowserSupabaseClient();
-    const ext      = file.name.split(".").pop() ?? "jpg";
-    const path     = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const { error } = await supabase.storage.from("events").upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+    try {
+      const body = new FormData();
+      body.append("file", file);
 
-    if (error) {
+      const res  = await fetch("/api/admin/upload-image", { method: "POST", body });
+      const json = await res.json();
+
+      if (!res.ok || json.error) {
+        setUploadProgress("error");
+        return;
+      }
+
+      setForm((f) => ({ ...f, image_url: json.url }));
+      setUploadProgress("done");
+    } catch {
       setUploadProgress("error");
-      return;
     }
-
-    const { data: { publicUrl } } = supabase.storage.from("events").getPublicUrl(path);
-    setForm((f) => ({ ...f, image_url: publicUrl }));
-    setUploadProgress("done");
   }
 
   async function removeImage() {
@@ -124,16 +129,18 @@ export default function AdminEventsPage() {
   }
 
   async function handleSave() {
-    const parsed = eventSchema.safeParse(form);
+    setSaveError(null);
+    const parsed = eventSchema.safeParse({ ...form, capacite_max: form.capacite_max ?? undefined });
     if (!parsed.success) {
       const errs: Record<string, string> = {};
       parsed.error.issues.forEach((e) => { errs[e.path[0] as string] = e.message; });
       setFormErrors(errs);
+      const msgs = parsed.error.issues.map((e) => `${String(e.path[0])}: ${e.message}`).join(", ");
+      setSaveError(`Erreur de validation — ${msgs}`);
       return;
     }
 
     setSaving(true);
-    const supabase = getBrowserSupabaseClient();
     const payload = {
       titre:        parsed.data.titre,
       description:  parsed.data.description || null,
@@ -149,31 +156,45 @@ export default function AdminEventsPage() {
       image_url:    form.image_url ?? null,
     };
 
-    if (editing) {
-      await supabase.from("events").update(payload).eq("id", editing);
-    } else {
-      await supabase.from("events").insert(payload);
-    }
+    const res = await fetch("/api/admin/events", {
+      method:  editing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(editing ? { id: editing, ...payload } : payload),
+    });
+    const json = await res.json();
 
     setSaving(false);
+    if (!res.ok || json.error) {
+      setSaveError(json.error ?? "Erreur lors de la sauvegarde.");
+      return;
+    }
     setShowForm(false);
     load();
   }
 
   async function toggleAlaUne(id: string, current: boolean) {
-    await getBrowserSupabaseClient().from("events").update({ a_la_une: !current }).eq("id", id);
+    await fetch("/api/admin/events", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, a_la_une: !current }),
+    });
     setEvents((prev) => prev.map((e) => e.id === id ? { ...e, a_la_une: !current } : e));
   }
 
   async function toggleStatut(id: string, current: string) {
     const next = current === "published" ? "draft" : "published";
-    await getBrowserSupabaseClient().from("events").update({ statut: next }).eq("id", id);
+    await fetch("/api/admin/events", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, statut: next }),
+    });
     setEvents((prev) => prev.map((e) => e.id === id ? { ...e, statut: next } : e));
   }
 
   async function deleteEvent(id: string) {
     if (!confirm("Supprimer cet événement ?")) return;
-    await getBrowserSupabaseClient().from("events").delete().eq("id", id);
+    await fetch("/api/admin/events", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
     setEvents((prev) => prev.filter((e) => e.id !== id));
   }
 
@@ -364,6 +385,11 @@ export default function AdminEventsPage() {
               </div>
             </div>
 
+            {saveError && (
+              <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-[13px] text-red-400">
+                {saveError}
+              </p>
+            )}
             <div className="flex gap-3 pt-2">
               <Button className="flex-1" onClick={handleSave} disabled={saving || uploadProgress === "uploading"}>
                 {saving ? <><Loader className="h-4 w-4 animate-spin" /> Enregistrement…</> : (editing ? "Mettre à jour" : "Créer l'événement")}

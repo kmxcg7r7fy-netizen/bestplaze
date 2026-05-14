@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BarChart3, CalendarDays, CalendarX, ChefHat, Key, LogOut, Settings, Sparkles, FlaskConical,
+  BarChart3, CalendarDays, CalendarX, ChefHat, ExternalLink, Key, LogOut, Settings, Sparkles, FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
@@ -68,8 +68,17 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      {/* Déconnexion */}
-      <div className="border-t border-white/8 px-3 py-4">
+      {/* Voir le site + Déconnexion */}
+      <div className="border-t border-white/8 px-3 py-4 space-y-1">
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-[14px] text-bp-text-2 transition hover:bg-white/6 hover:text-bp-text"
+        >
+          <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+          Voir le site
+        </a>
         <button
           onClick={signOut}
           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-[14px] text-bp-muted transition hover:bg-white/6 hover:text-bp-text"

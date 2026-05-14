@@ -7,8 +7,7 @@ export function Footer() {
         <div className="flex flex-col gap-3">
           <p className="font-serif text-[18px] text-bp-text">{brand.name}</p>
           <p className="text-[14px] leading-6 text-bp-text-2">
-            Univers noir & or. Soirées, cocktails signatures et expérience lounge
-            premium.
+            Soirées, cocktails signatures et expérience lounge premium.
           </p>
         </div>
         <div className="flex flex-col gap-2">

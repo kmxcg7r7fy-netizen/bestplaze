@@ -48,7 +48,7 @@ export function ReservationSummary({
           <Badge variant="gold">Expérience premium</Badge>
         </div>
         <p className="text-[13px] leading-6 text-bp-text-2">
-          Vos informations sont enregistrées localement (V1 mock).
+          Après confirmation, votre demande est enregistrée et l&apos;équipe vous recontacte si besoin.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

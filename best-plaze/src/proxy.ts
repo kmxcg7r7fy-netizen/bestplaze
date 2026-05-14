@@ -2,11 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function proxy(request: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!url || !key) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    key,
     {
       cookies: {
         getAll() {
@@ -71,7 +77,7 @@ export async function proxy(request: NextRequest) {
         .from("profiles")
         .select("is_admin")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.is_admin) {
         return NextResponse.redirect(new URL("/admin/login", request.url));
@@ -90,13 +96,27 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // ── Redirige un utilisateur déjà connecté loin des pages login ───────────
+  // ── Redirige un utilisateur déjà connecté loin des pages login (compte client) ─
   if (user) {
     if (path === "/account/login" || path === "/account/register") {
       return NextResponse.redirect(new URL("/account", request.url));
     }
     if (path === "/admin/login") {
-      return NextResponse.redirect(new URL("/admin", request.url));
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const isListedAdmin = Boolean(adminEmail && user.email === adminEmail);
+      let isAdminProfile = false;
+      if (!isListedAdmin) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .maybeSingle();
+        isAdminProfile = Boolean(profile?.is_admin);
+      }
+      if (isListedAdmin || isAdminProfile) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+      // Session « compte » non admin : ne pas boucler /admin ↔ /admin/login
     }
   }
 

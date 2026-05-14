@@ -21,7 +21,16 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError("");
 
-    const supabase = getBrowserSupabaseClient();
+    let supabase;
+    try {
+      supabase = getBrowserSupabaseClient();
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "Configuration Supabase manquante.";
+      setError(`${msg} Vérifiez .env.local (NEXT_PUBLIC_SUPABASE_URL, ANON_KEY).`);
+      setLoading(false);
+      return;
+    }
     const { error: authError } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,

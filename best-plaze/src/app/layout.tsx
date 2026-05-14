@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { AppShell } from "@/components/shell/AppShell";
 
 const fontBody = Inter({
   variable: "--font-body",
@@ -24,7 +23,7 @@ const fontDisplay = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "XI BestPlaze — Resto-Lounge Tours",
+    default: "XI BestPlaze — Lounge Tours",
     template: "%s · XI BestPlaze",
   },
   description:
@@ -47,7 +46,7 @@ export default function RootLayout({
       className={`${fontBody.variable} ${fontDisplay.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bp-bg text-bp-text font-sans">
-        <AppShell>{children}</AppShell>
+        {children}
         <Toaster
           theme="dark"
           position="top-right"

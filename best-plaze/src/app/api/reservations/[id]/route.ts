@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { buildConfirmationEmail } from "@/lib/email/confirmationTemplate";
 import type { ReservationRow } from "@/types/reservation";
 
 const uuidRe =
@@ -40,4 +42,72 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   return NextResponse.json({ reservation: data as ReservationRow });
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const { id } = await context.params;
+
+  if (!id || !uuidRe.test(id)) {
+    return NextResponse.json({ error: "Identifiant UUID invalide" }, { status: 400 });
+  }
+
+  let body: { statut: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "JSON invalide" }, { status: 400 });
+  }
+
+  const { statut } = body;
+  if (!statut) {
+    return NextResponse.json({ error: "statut manquant" }, { status: 400 });
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("reservations")
+    .update({ statut })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const reservation = data as ReservationRow;
+
+  // ── Envoi email de confirmation ──────────────────────────────────────────
+  if (statut === "confirmee") {
+    const isRealEmail =
+      reservation.email &&
+      !reservation.email.endsWith("@noemail.bestplaze");
+
+    if (isRealEmail && process.env.RESEND_API_KEY) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const { subject, html } = buildConfirmationEmail(reservation);
+        // En mode test Resend (onboarding@resend.dev), les emails
+        // ne peuvent être envoyés qu'à l'adresse du compte Resend.
+        const isDev = process.env.NODE_ENV !== "production";
+        const recipient = isDev
+          ? (process.env.ADMIN_EMAIL ?? reservation.email)
+          : reservation.email;
+
+        await resend.emails.send({
+          from:    "XI BestPlaze <onboarding@resend.dev>",
+          to:      recipient,
+          replyTo: reservation.email,
+          subject,
+          html,
+        });
+      } catch (emailErr) {
+        // L'email a échoué mais la mise à jour DB a réussi — on log sans bloquer
+        console.error("[Resend] Échec envoi email:", emailErr);
+      }
+    }
+  }
+
+  return NextResponse.json({ reservation });
 }

@@ -6,6 +6,16 @@ function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
 
+/** Email réel ou valeur technique si réservation « téléphone seul » (colonne email NOT NULL). */
+function emailForDatabase(email: unknown, phone: unknown): string | null {
+  if (isNonEmptyString(email)) return email.trim().toLowerCase();
+  if (isNonEmptyString(phone)) {
+    const slug = phone.trim().replace(/[^\d+]/g, "") || "tel";
+    return `reserve+${slug}@noemail.bestplaze`;
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   let body: Partial<CreateReservationBody>;
   try {
@@ -29,10 +39,12 @@ export async function POST(request: Request) {
     totalEstimatif,
   } = body;
 
+  const resolvedEmail = emailForDatabase(email, phone);
+
   if (
     !isNonEmptyString(firstName) ||
     !isNonEmptyString(lastName) ||
-    !isNonEmptyString(email) ||
+    !resolvedEmail ||
     !isNonEmptyString(dateISO) ||
     !isNonEmptyString(time) ||
     !isNonEmptyString(area)
@@ -40,7 +52,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Champs requis manquants : firstName, lastName, email, dateISO, time, area",
+          "Champs requis manquants : firstName, lastName, email ou téléphone, dateISO, time, area",
       },
       { status: 400 }
     );
@@ -122,7 +134,7 @@ export async function POST(request: Request) {
   const insert = {
     nom: lastName.trim(),
     prenom: firstName.trim(),
-    email: email.trim().toLowerCase(),
+    email: resolvedEmail,
     telephone: phone?.trim() || null,
     date_reservation: dateISO,
     heure: time.trim(),

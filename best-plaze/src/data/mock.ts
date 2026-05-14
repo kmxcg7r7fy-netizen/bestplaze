@@ -56,7 +56,7 @@ export type Booking = {
 
 export const brand = {
   name: "XI BestPlaze",
-  baseline: "Resto-Lounge · Cocktails & Saveurs",
+  baseline: "Lounge · Cocktails & Saveurs",
   cta: "Réservez votre expérience",
   address: "56 Rue de Suède, 37100 Tours",
   phone: "07 68 62 73 19",
