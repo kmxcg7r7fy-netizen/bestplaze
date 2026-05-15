@@ -46,6 +46,20 @@ function unique<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
+function Skeleton() {
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="aspect-[4/5] animate-pulse rounded-3xl"
+          style={{ background: "rgba(255,255,255,0.05)", animationDelay: `${i * 120}ms` }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function EventsPage() {
   const [dbEvents, setDbEvents] = useState<EventDisplay[] | null>(null);
   const [loading, setLoading]   = useState(true);
@@ -53,9 +67,9 @@ export default function EventsPage() {
   const [mode, setMode]         = useState<EventCardMode>("grid");
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
     async function fetchEvents() {
       try {
+        const today = new Date().toISOString().split("T")[0];
         const { data } = await getBrowserSupabaseClient()
           .from("events")
           .select("id, titre, date, heure_debut, type, description, dress_code, a_la_une, image_url, prix_entree")
@@ -65,7 +79,7 @@ export default function EventsPage() {
           .order("date",     { ascending: true });
         setDbEvents(data && data.length > 0 ? data.map(fromDb) : null);
       } catch {
-        // fallback vers mock
+        // fallback mock
       } finally {
         setLoading(false);
       }
@@ -73,113 +87,142 @@ export default function EventsPage() {
     fetchEvents();
   }, []);
 
-  const allEvents: EventDisplay[] = dbEvents ?? mockEvents.map(fromMock);
-  const featured  = allEvents.find((e) => e.highlight) ?? allEvents[0];
-  const allTypes  = ["Tous", ...unique(allEvents.map((e) => e.type))];
+  // ── Source de données (Supabase ou mock) ──────────────────────────────────
+  const allEvents: EventDisplay[] = useMemo(
+    () => dbEvents ?? mockEvents.map(fromMock),
+    [dbEvents],
+  );
 
-  const filtered = useMemo(() => {
-    const rest = allEvents.filter((e) => e.id !== featured?.id);
-    return active === "Tous" ? rest : rest.filter((e) => e.type === active);
-  }, [allEvents, active, featured?.id]);
+  // ── Catégories disponibles ────────────────────────────────────────────────
+  const allTypes = useMemo(
+    () => ["Tous", ...unique(allEvents.map((e) => e.type))],
+    [allEvents],
+  );
+
+  // ── Filtrage : d'abord par catégorie, PUIS séparer vedette / reste ────────
+  const filteredByType = useMemo(
+    () => (active === "Tous" ? allEvents : allEvents.filter((e) => e.type === active)),
+    [allEvents, active],
+  );
+
+  const featured = useMemo(
+    () => filteredByType.find((e) => e.highlight) ?? filteredByType[0] ?? null,
+    [filteredByType],
+  );
+
+  const rest = useMemo(
+    () => filteredByType.filter((e) => e.id !== featured?.id),
+    [filteredByType, featured],
+  );
+
+  const total = filteredByType.length;
 
   return (
-    <div className="space-y-10 py-4">
-      {/* ── En-tête section ────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-[12px] uppercase tracking-[0.22em] text-bp-gold font-semibold">
-            Nuits &amp; rendez-vous
-          </p>
-          <h1 className="font-serif text-[32px] font-bold leading-tight tracking-[-0.02em] text-bp-text sm:text-[40px]">
-            Événements à venir
-          </h1>
-          <p className="text-[15px] leading-relaxed text-bp-text-2">
-            Une sélection premium, une esthétique noire &amp; dorée, et une réservation fluide pour chaque soirée.
-          </p>
+    <div className="flex flex-col gap-10 py-4">
+
+      {/* ── En-tête ──────────────────────────────────────────────────────── */}
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-bp-gold">
+              Nuits &amp; rendez-vous
+            </p>
+            <h1 className="font-serif text-[34px] leading-tight tracking-[-0.02em] text-bp-text sm:text-[44px] lg:text-[52px]">
+              Événements
+            </h1>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {!loading && total > 0 && (
+              <p className="text-[13px] text-bp-muted">
+                {total} soirée{total !== 1 ? "s" : ""}
+              </p>
+            )}
+            <EventFormatToggle value={mode} onChange={setMode} />
+          </div>
         </div>
-        <EventFormatToggle value={mode} onChange={setMode} />
-      </div>
 
-      {/* ── Filtres type ───────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrer par type">
-        {allTypes.map((t) => (
-          <button
-            key={t}
-            onClick={() => setActive(t)}
-            aria-pressed={active === t}
-            className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition ${
-              active === t
-                ? "border-bp-gold/30 bg-bp-gold/15 text-bp-gold"
-                : "border-white/10 bg-transparent text-bp-text-2 hover:bg-white/6 hover:text-bp-text"
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-        {!loading && (
-          <span className="ml-auto text-[12px] text-bp-muted">
-            {filtered.length + (featured ? 1 : 0)} soirée{filtered.length + (featured ? 1 : 0) !== 1 ? "s" : ""}
-          </span>
+        {/* Filtres catégorie */}
+        {!loading && allTypes.length > 1 && (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par type">
+            {allTypes.map((t) => (
+              <button
+                key={t}
+                onClick={() => setActive(t)}
+                aria-pressed={active === t}
+                className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
+                  active === t
+                    ? "border-bp-gold/30 bg-bp-gold/12 text-bp-gold"
+                    : "border-white/10 bg-transparent text-bp-text-2 hover:border-white/18 hover:bg-white/5 hover:text-bp-text"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         )}
+
+        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
-      {/* ── Contenu ────────────────────────────────────────────────────── */}
+      {/* ── Contenu ──────────────────────────────────────────────────────── */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 animate-pulse rounded-3xl bg-white/5" />
-          ))}
+        <Skeleton />
+      ) : filteredByType.length === 0 ? (
+        /* État vide */
+        <div className="flex flex-col items-center gap-4 py-24 text-center">
+          <p className="text-[32px]">🎭</p>
+          <p className="text-[16px] text-bp-text-2">
+            Aucune soirée de ce type en programmation.
+          </p>
+          <Button variant="secondary" onClick={() => setActive("Tous")}>
+            Voir tous les événements <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Event vedette */}
+        <div className="flex flex-col gap-8">
+
+          {/* Événement vedette */}
           {featured && (
             <section>
               {mode === "hero" && (
-                <p className="mb-3 text-[12px] uppercase tracking-[0.18em] text-bp-muted">
+                <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-bp-muted">
                   Événement du moment
                 </p>
               )}
-              <EventCard event={featured} mode={mode === "hero" ? "hero" : mode} priority />
+              <EventCard
+                event={featured}
+                mode={mode === "hero" ? "hero" : mode}
+                priority
+              />
             </section>
           )}
 
-          {/* Grille / Liste / Secondaire vedette */}
-          {filtered.length > 0 && (
+          {/* Reste des événements */}
+          {rest.length > 0 && (
             <section className="space-y-4">
               {mode === "hero" && (
-                <p className="text-[12px] uppercase tracking-[0.18em] text-bp-muted">
-                  À venir
+                <p className="text-[11px] uppercase tracking-[0.2em] text-bp-muted">
+                  Prochainement
                 </p>
               )}
-              {mode === "grid" && (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filtered.map((e) => (
+
+              {(mode === "grid" || mode === "hero") && (
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {rest.map((e) => (
                     <EventCard key={e.id} event={e} mode="grid" />
                   ))}
                 </div>
               )}
+
               {mode === "list" && (
                 <div className="flex flex-col gap-4">
-                  {filtered.map((e) => (
+                  {rest.map((e) => (
                     <EventCard key={e.id} event={e} mode="list" />
                   ))}
                 </div>
               )}
-              {mode === "hero" && (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filtered.map((e) => (
-                    <EventCard key={e.id} event={e} mode="grid" />
-                  ))}
-                </div>
-              )}
             </section>
-          )}
-
-          {filtered.length === 0 && !featured && (
-            <p className="py-12 text-center text-[14px] text-bp-text-2">
-              Aucun événement de ce type en programmation.
-            </p>
           )}
         </div>
       )}

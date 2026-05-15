@@ -35,24 +35,22 @@
   --font-serif: var(--font-display);
 }
 
+html {
+  /* Couleur de base : évite tout flash blanc */
+  background-color: var(--bp-bg);
+}
+
 body {
-  background: radial-gradient(
-      1200px 700px at 20% -10%,
-      rgba(216, 176, 90, 0.16),
-      transparent 55%
-    ),
-    radial-gradient(
-      1100px 800px at 100% 0%,
-      rgba(241, 210, 138, 0.12),
-      transparent 60%
-    ),
-    radial-gradient(
-      900px 600px at 60% 110%,
-      rgba(216, 176, 90, 0.12),
-      transparent 55%
-    ),
+  /* background-attachment:fixed → le gradient reste ancré au viewport,
+     plus aucune "coupure" visible entre les sections au scroll */
+  background:
+    radial-gradient(ellipse 1400px 900px at 15% -5%,  rgba(216, 176, 90, 0.17), transparent 55%),
+    radial-gradient(ellipse 1200px 800px at 95%  5%,  rgba(241, 210, 138, 0.10), transparent 55%),
+    radial-gradient(ellipse 1000px 700px at 50% 100%, rgba(216, 176, 90, 0.10), transparent 55%),
     linear-gradient(180deg, var(--bp-bg), var(--bp-bg-2));
+  background-attachment: fixed;
   color: var(--bp-text);
+  scroll-behavior: smooth;
 }
 
 ::selection {

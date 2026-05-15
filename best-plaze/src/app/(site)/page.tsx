@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock, MapPin } from "lucide-react";
 import { EventCard, type EventDisplay } from "@/components/events/EventCard";
 import { Button } from "@/components/ui/Button";
-import { events as mockEvents } from "@/data/mock";
+import { Badge } from "@/components/ui/Badge";
+import { MapEmbed } from "@/components/map/MapEmbed";
+import { events as mockEvents, menuItems } from "@/data/mock";
 
 async function getLiveEvents(): Promise<EventDisplay[]> {
   try {
@@ -20,8 +22,7 @@ async function getLiveEvents(): Promise<EventDisplay[]> {
       .gte("date", today)
       .order("a_la_une", { ascending: false })
       .order("date",     { ascending: true })
-      .limit(3);
-
+      .limit(4);
     if (data && data.length > 0) {
       return data.map((e) => ({
         id:          e.id,
@@ -39,6 +40,22 @@ async function getLiveEvents(): Promise<EventDisplay[]> {
   } catch { /* mock fallback */ }
   return [];
 }
+
+const badgeVariant: Record<string, "gold" | "soft"> = {
+  Signature: "gold", "Best-seller": "soft", Premium: "gold",
+};
+
+// ── Séparateur de section ─────────────────────────────────────────────────────
+function Divider() {
+  return (
+    <div className="flex items-center gap-4 px-2">
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/12 to-transparent" />
+      <div className="h-1 w-1 rounded-full bg-white/20" />
+      <div className="h-px flex-1 bg-gradient-to-l from-transparent via-white/12 to-transparent" />
+    </div>
+  );
+}
+
 
 export default async function Home() {
   const liveEvents = await getLiveEvents();
@@ -60,26 +77,34 @@ export default async function Home() {
         }));
 
   const featured   = allEvents.find((e) => e.highlight) ?? allEvents[0];
-  const nextEvents = allEvents.filter((e) => e.id !== featured?.id).slice(0, 2);
+  const nextEvents = allEvents.filter((e) => e.id !== featured?.id).slice(0, 3);
+  const cocktails  = menuItems.filter((x) => x.category === "Cocktails").slice(0, 6);
 
   return (
-    <div className="flex flex-col gap-24 py-8">
+    <div className="flex flex-col gap-20 py-6 md:gap-28 lg:gap-32">
 
-      {/* ── Intro ────────────────────────────────────────────────────────── */}
-      <section className="flex flex-col items-center gap-8 text-center">
-        <div className="space-y-4">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-bp-gold">
-            Bar Lounge · Tours
-          </p>
-          <h1 className="font-serif text-[48px] leading-[1] tracking-[-0.03em] text-bp-text sm:text-[64px] md:text-[80px]">
-            XI BestPlaze
-          </h1>
-          <p className="mx-auto max-w-sm text-[16px] leading-relaxed text-bp-text-2">
-            Cocktails, concerts et dancefloor.<br />Mardi – Samedi, 18h – 2h.
-          </p>
+      {/* ── 1. INTRO ──────────────────────────────────────────────────────── */}
+      <section className="flex flex-col items-center gap-6 text-center">
+        {/* Ligne décorative desktop */}
+        <div className="hidden lg:flex items-center gap-6 w-full max-w-2xl">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent to-bp-gold/30" />
+          <p className="text-[10px] uppercase tracking-[0.32em] text-bp-gold/80">Bar Lounge · Tours</p>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent to-bp-gold/30" />
         </div>
+        <p className="text-[11px] uppercase tracking-[0.28em] text-bp-gold lg:hidden">
+          Bar Lounge · Tours
+        </p>
 
-        <div className="flex items-center gap-3">
+        <h1 className="font-serif text-[54px] leading-[0.92] tracking-[-0.03em] text-bp-text sm:text-[76px] lg:text-[100px] xl:text-[116px]">
+          XI BestPlaze
+        </h1>
+
+        <p className="max-w-xs text-[15px] leading-relaxed text-bp-text-2 sm:max-w-sm sm:text-[16px] lg:max-w-md lg:text-[17px]">
+          Cocktails, concerts et dancefloor.<br />
+          <span className="text-bp-muted">Mardi – Samedi · 18h – 2h.</span>
+        </p>
+
+        <div className="flex items-center gap-3 pt-1">
           <Button href="/reservation">
             <CalendarDays className="h-4 w-4" />
             Réserver
@@ -91,91 +116,143 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── Événement à la une ───────────────────────────────────────────── */}
+      {/* ── 2. ÉVÉNEMENT À LA UNE ─────────────────────────────────────────── */}
       {featured && (
-        <section className="space-y-6">
+        <>
+          <Divider />
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">
+                À l&apos;affiche
+              </p>
+              <Link href="/events" className="flex items-center gap-1 text-[13px] text-bp-muted transition hover:text-bp-text">
+                Toutes les soirées <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <EventCard event={featured} mode="poster" priority />
+          </section>
+        </>
+      )}
+
+      {/* ── 3. PROCHAINES SOIRÉES ─────────────────────────────────────────── */}
+      {nextEvents.length > 0 && (
+        <>
+          <Divider />
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">
+                À venir
+              </p>
+              <Link href="/events" className="flex items-center gap-1 text-[13px] text-bp-muted transition hover:text-bp-text">
+                Voir tout <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <div className={`grid gap-5 ${nextEvents.length >= 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}>
+              {nextEvents.map((e) => (
+                <EventCard key={e.id} event={e} mode="grid" />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* ── 4. CARTE DES BOISSONS ─────────────────────────────────────────── */}
+      <>
+        <Divider />
+        <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">
-              À l&apos;affiche
-            </p>
-            <Link
-              href="/events"
-              className="text-[13px] text-bp-muted transition hover:text-bp-text"
-            >
-              Toutes les soirées →
+            <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">La carte</p>
+            <Link href="/menu" className="flex items-center gap-1 text-[13px] text-bp-muted transition hover:text-bp-text">
+              Voir tout <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
-          <EventCard event={featured} mode="hero" priority />
-        </section>
-      )}
-
-      {/* ── Prochaines soirées ───────────────────────────────────────────── */}
-      {nextEvents.length > 0 && (
-        <section className="space-y-6">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">
-            À venir
-          </p>
-          <div className="grid gap-6 sm:grid-cols-2">
-            {nextEvents.map((e) => (
-              <EventCard key={e.id} event={e} mode="grid" />
+          {/* Mobile : scroll horizontal */}
+          <div className="flex gap-3 overflow-x-auto pb-1 sm:hidden" style={{ scrollbarWidth: "none" }}>
+            {cocktails.map((item) => (
+              <div
+                key={item.id}
+                className="flex w-[210px] shrink-0 items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[14px] font-medium text-bp-text">{item.name}</p>
+                  {item.badge && (
+                    <Badge variant={badgeVariant[item.badge] ?? "soft"} className="mt-1">
+                      {item.badge}
+                    </Badge>
+                  )}
+                </div>
+                <p className="shrink-0 font-serif text-[17px] text-bp-gold">{item.price}€</p>
+              </div>
             ))}
           </div>
+
+          {/* Desktop : grille */}
+          <div className="hidden sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
+            {cocktails.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/[0.03] px-5 py-4 transition hover:border-white/14 hover:bg-white/[0.055]"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[14px] font-medium text-bp-text">{item.name}</p>
+                    {item.badge && (
+                      <Badge variant={badgeVariant[item.badge] ?? "soft"}>{item.badge}</Badge>
+                    )}
+                  </div>
+                  {item.description && (
+                    <p className="mt-0.5 truncate text-[12px] text-bp-muted">{item.description}</p>
+                  )}
+                </div>
+                <p className="shrink-0 font-serif text-[18px] text-bp-gold">{item.price}€</p>
+              </div>
+            ))}
+          </div>
+
+          <Button variant="secondary" href="/menu">
+            Voir la carte complète <ArrowRight className="h-4 w-4" />
+          </Button>
         </section>
-      )}
+      </>
 
-      {/* ── Localisation ─────────────────────────────────────────────────── */}
-      <section className="space-y-6">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">
-          Nous trouver
-        </p>
+      {/* ── 5. LOCALISATION ───────────────────────────────────────────────── */}
+      <>
+        <Divider />
+        <section className="space-y-5">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">Nous trouver</p>
 
-        <div className="overflow-hidden rounded-2xl border border-white/10">
-          {/* Carte */}
-          <div className="relative h-[320px] w-full sm:h-[400px]">
-            <iframe
-              src="https://maps.google.com/maps?q=56+Rue+de+Su%C3%A8de+37000+Tours+France&output=embed&z=16&hl=fr"
-              width="100%"
-              height="100%"
-              style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) brightness(0.85) contrast(0.9)" }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="XI BestPlaze — 56 Rue de Suède, Tours"
-            />
-          </div>
+          {/* Carte Google Maps + infos */}
+          <div className="overflow-hidden rounded-2xl border border-white/10 transition hover:border-white/16">
+            <MapEmbed />
 
-          {/* Infos */}
-          <div className="grid gap-px bg-white/8 sm:grid-cols-3">
-            <div className="flex items-center gap-3 bg-bp-bg px-5 py-4">
-              <MapPin className="h-4 w-4 shrink-0 text-bp-gold" />
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-bp-muted">Adresse</p>
-                <p className="mt-0.5 text-[14px] text-bp-text">56 Rue de Suède, Tours</p>
+            {/* Infos dessous — fond transparent pour ne pas couper le gradient */}
+            <div className="grid sm:grid-cols-3 divide-y divide-white/8 sm:divide-y-0 sm:divide-x sm:divide-white/8">
+              <div className="flex items-center gap-3 px-5 py-4">
+                <MapPin className="h-4 w-4 shrink-0 text-bp-gold" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-bp-muted">Adresse</p>
+                  <p className="mt-0.5 text-[14px] text-bp-text">56 Rue de Suède, Tours</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 bg-bp-bg px-5 py-4">
-              <Clock className="h-4 w-4 shrink-0 text-bp-gold" />
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-bp-muted">Horaires</p>
-                <p className="mt-0.5 text-[14px] text-bp-text">Mar – Sam · 18h – 2h</p>
+              <div className="flex items-center gap-3 px-5 py-4">
+                <Clock className="h-4 w-4 shrink-0 text-bp-gold" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-bp-muted">Horaires</p>
+                  <p className="mt-0.5 text-[14px] text-bp-text">Mar – Sam · 18h – 2h</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 bg-bp-bg px-5 py-4">
-              <CalendarDays className="h-4 w-4 shrink-0 text-bp-gold" />
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-bp-muted">Réservation</p>
-                <Link
-                  href="/reservation"
-                  className="mt-0.5 block text-[14px] text-bp-gold underline-offset-2 hover:underline"
-                >
-                  Réserver une table →
-                </Link>
+              <div className="flex items-center gap-3 px-5 py-4">
+                <CalendarDays className="h-4 w-4 shrink-0 text-bp-gold" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-bp-muted">Réservation</p>
+                  <p className="mt-0.5 text-[14px] text-bp-gold">Réserver une table →</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </>
 
     </div>
   );

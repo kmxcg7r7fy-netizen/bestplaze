@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { Minus, Plus, Sparkles, Phone, Mail, CalendarDays } from "lucide-react";
+import { Minus, Plus, Sparkles, Phone, Mail, CalendarDays, ChevronDown } from "lucide-react";
 import { ReservationSummary, type ReservationDraft } from "@/components/reservation/ReservationSummary";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Label, Select, Textarea } from "@/components/ui/Input";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { brand, menuItems } from "@/data/mock";
+import { brand, menuItems, menuCategories } from "@/data/mock";
 
 const timeSlots = [
   "12:00", "12:30", "13:00", "13:30", "14:00",
@@ -70,21 +70,11 @@ export default function ReservationPage() {
     })();
   }, []);
 
-  const preselectOptions = useMemo(() => {
-    const picks = menuItems
-      .filter(
-        (x) =>
-          (x.category === "Cocktails" && x.id !== "ct-punch") ||
-          x.category === "Sans alcool" ||
-          x.category === "Champagnes",
-      )
-      .slice(0, 6)
-      .map((x) => ({
-        label: x.name,
-        unitPrice: x.price,
-      }));
-    return picks;
-  }, []);
+  // Toute la carte disponible en pré-sélection
+  const preselectOptions = useMemo(
+    () => menuItems.map((x) => ({ label: x.name, unitPrice: x.price })),
+    [],
+  );
 
   const [draft, setDraft] = useState<ReservationDraft>({
     dateISO: todayPlusLocal(3),
@@ -98,6 +88,15 @@ export default function ReservationPage() {
   const [closedDates, setClosedDates] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Catégories dépliées — Cocktails ouverte par défaut
+  const [openCats, setOpenCats] = useState<Set<string>>(new Set(["Cocktails"]));
+  const toggleCat = useCallback((id: string) => {
+    setOpenCats((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
 
   const handleConfirm = useCallback(async () => {
     setError(null);
@@ -331,73 +330,146 @@ export default function ReservationPage() {
             </div>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
+          {/* ── Pré-sélection boissons — accordion mobile-first ── */}
+          <div className="overflow-hidden rounded-3xl border border-white/10">
+            {/* En-tête fixe */}
+            <div className="border-b border-white/8 px-5 py-4">
+              <div className="flex items-center gap-2">
                 <p className="text-[12px] uppercase tracking-[0.18em] text-bp-muted">
-                  Pré-sélection
+                  Pré-sélection boissons
                 </p>
-                <p className="font-serif text-[22px] text-bp-text">
-                  Anticipez votre expérience
-                </p>
-                <p className="text-[14px] leading-6 text-bp-text-2">
-                  Sélectionnez quelques produits (cocktails, premium, tapas). Le total est estimatif.
-                </p>
+                <span className="rounded-full border border-white/12 bg-white/5 px-2 py-0.5 text-[11px] text-bp-muted">
+                  Facultatif
+                </span>
               </div>
-              <div className="hidden rounded-2xl border border-bp-gold/20 bg-bp-gold/10 px-3 py-2 text-[12px] tracking-[0.12em] text-bp-gold sm:flex">
-                <Sparkles className="h-4 w-4" /> Luxe discret
+              <p className="mt-1 font-serif text-[20px] text-bp-text">Anticipez votre soirée</p>
+              {/* Mention aucun paiement */}
+              <div className="mt-3 flex items-start gap-2 rounded-2xl border border-bp-gold/18 bg-bp-gold/6 px-3.5 py-2.5">
+                <Sparkles className="mt-px h-3.5 w-3.5 shrink-0 text-bp-gold" />
+                <p className="text-[11px] leading-relaxed text-bp-text-2">
+                  <span className="font-medium text-bp-text">Aucun paiement requis.</span>{" "}
+                  Indicatif uniquement — règlement sur place.
+                </p>
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3">
-              {draft.preselected.map((x, idx) => (
+            {/* Accordéon par catégorie */}
+            {menuCategories.map((cat, catI) => {
+              const catItems = menuItems
+                .map((item, idx) => ({ item, idx }))
+                .filter(({ item }) => item.category === cat.id);
+              if (catItems.length === 0) return null;
+
+              const isOpen = openCats.has(cat.id);
+              // Nombre d'items sélectionnés + sous-total dans cette catégorie
+              const selCount = catItems.reduce((n, { idx }) => n + (draft.preselected[idx]?.qty ?? 0), 0);
+              const selTotal = catItems.reduce(
+                (s, { item, idx }) => s + item.price * (draft.preselected[idx]?.qty ?? 0),
+                0,
+              );
+
+              return (
                 <div
-                  key={x.label}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 p-4"
+                  key={cat.id}
+                  className={catI < menuCategories.length - 1 ? "border-b border-white/8" : ""}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-[14px] font-medium text-bp-text">
-                      {x.label}
-                    </p>
-                    {x.unitPrice ? (
-                      <p className="text-[12px] text-bp-muted">{x.unitPrice}€ / unité</p>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      className="h-10 w-10 rounded-2xl p-0"
-                      onClick={() =>
-                        setDraft((d) => {
-                          const copy = [...d.preselected];
-                          copy[idx] = { ...copy[idx], qty: Math.max(0, copy[idx].qty - 1) };
-                          return { ...d, preselected: copy };
-                        })
-                      }
-                    >
-                      <Minus className="h-5 w-5" />
-                    </Button>
-                    <div className="grid h-10 w-12 place-items-center rounded-2xl border border-white/10 bg-black/20 text-[14px] text-bp-text">
-                      {x.qty}
+                  {/* Header cliquable */}
+                  <button
+                    type="button"
+                    onClick={() => toggleCat(cat.id)}
+                    className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-white/[0.03] active:bg-white/[0.05]"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[14px] font-medium text-bp-text">{cat.label}</span>
+                      {selCount > 0 && (
+                        <span className="flex items-center gap-1 rounded-full border border-bp-gold/30 bg-bp-gold/12 px-2 py-0.5 text-[11px] text-bp-gold">
+                          {selCount} · {selTotal}€
+                        </span>
+                      )}
                     </div>
-                    <Button
-                      variant="secondary"
-                      className="h-10 w-10 rounded-2xl p-0"
-                      onClick={() =>
-                        setDraft((d) => {
-                          const copy = [...d.preselected];
-                          copy[idx] = { ...copy[idx], qty: Math.min(9, copy[idx].qty + 1) };
-                          return { ...d, preselected: copy };
-                        })
-                      }
-                    >
-                      <Plus className="h-5 w-5" />
-                    </Button>
+                    <ChevronDown
+                      className="h-4 w-4 shrink-0 text-bp-muted transition-transform duration-300"
+                      style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                    />
+                  </button>
+
+                  {/* Contenu — animation hauteur via grid trick */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateRows: isOpen ? "1fr" : "0fr",
+                      transition: "grid-template-rows 0.28s cubic-bezier(0.4,0,0.2,1)",
+                    }}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="divide-y divide-white/6 px-4 pb-3 pt-1">
+                        {catItems.map(({ item, idx }) => {
+                          const qty = draft.preselected[idx]?.qty ?? 0;
+                          return (
+                            <div
+                              key={item.id}
+                              className={`flex items-center gap-3 py-3 transition-colors ${
+                                qty > 0 ? "opacity-100" : "opacity-90"
+                              }`}
+                            >
+                              {/* Infos produit */}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[13px] font-medium text-bp-text">{item.name}</p>
+                                <p className="text-[12px] text-bp-gold">{item.price}€</p>
+                              </div>
+
+                              {/* Compteur inline */}
+                              <div className="flex shrink-0 items-center gap-1">
+                                <button
+                                  type="button"
+                                  disabled={qty === 0}
+                                  onClick={() =>
+                                    setDraft((d) => {
+                                      const copy = [...d.preselected];
+                                      copy[idx] = { ...copy[idx], qty: Math.max(0, qty - 1) };
+                                      return { ...d, preselected: copy };
+                                    })
+                                  }
+                                  className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-bp-text-2 transition hover:bg-white/10 disabled:opacity-30"
+                                >
+                                  <Minus className="h-3.5 w-3.5" />
+                                </button>
+
+                                <div
+                                  className="grid h-9 w-10 place-items-center rounded-2xl border text-[13px] font-medium transition-colors"
+                                  style={{
+                                    borderColor: qty > 0 ? "rgba(216,176,90,0.35)" : "rgba(255,255,255,0.08)",
+                                    color: qty > 0 ? "var(--bp-gold)" : "var(--bp-text)",
+                                    background: qty > 0 ? "rgba(216,176,90,0.08)" : "rgba(0,0,0,0.2)",
+                                  }}
+                                >
+                                  {qty}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setDraft((d) => {
+                                      const copy = [...d.preselected];
+                                      copy[idx] = { ...copy[idx], qty: Math.min(20, qty + 1) };
+                                      return { ...d, preselected: copy };
+                                    })
+                                  }
+                                  className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-bp-text-2 transition hover:bg-white/10"
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
+              );
+            })}
+          </div>
         </div>
 
         <div className="lg:sticky lg:top-24 space-y-3">

@@ -111,19 +111,26 @@ export function ReservationSummary({
           )}
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/25 p-4">
-          <div>
-            <p className="text-[12px] uppercase tracking-[0.16em] text-bp-muted">
-              Total estimatif
-            </p>
-            <p className="mt-1 font-serif text-[20px] text-bp-gold">
-              {estimated ? priceEUR(estimated) : "—"}
-            </p>
+        {/* Total estimatif */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-bp-muted">
+                Total estimatif
+              </p>
+              <p className="mt-0.5 font-serif text-[20px] text-bp-gold">
+                {estimated ? priceEUR(estimated) : "—"}
+              </p>
+            </div>
           </div>
-          <Button className="px-5" onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? "Redirection…" : "Confirmer ma réservation"}
-          </Button>
+          <p className="px-1 text-[11px] leading-relaxed text-bp-muted">
+            💳 Aucun paiement requis — ce total est purement indicatif. Le règlement s&apos;effectue uniquement sur place le soir de votre réservation.
+          </p>
         </div>
+
+        <Button className="w-full justify-center" onClick={onConfirm} disabled={isLoading}>
+          {isLoading ? "Redirection…" : "Confirmer ma réservation"}
+        </Button>
       </CardContent>
     </Card>
   );
