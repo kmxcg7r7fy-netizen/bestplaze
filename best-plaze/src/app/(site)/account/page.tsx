@@ -80,33 +80,52 @@ export default function AccountPage() {
   const [loading, setLoading]   = useState(true);
 
   const loadData = useCallback(async () => {
-    const supabase = getBrowserSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace("/account/login"); return; }
+    try {
+      const supabase = getBrowserSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id, email, prenom, nom, telephone, is_vip")
-      .eq("id", user.id)
-      .single();
+      if (!user) {
+        router.replace("/account/login");
+        return; // setLoading reste true → le spinner couvre la transition de page
+      }
 
-    setProfile(profileData ?? { id: user.id, email: user.email ?? "" });
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, email, prenom, nom, telephone, is_vip")
+        .eq("id", user.id)
+        .single();
 
-    const today = new Date().toISOString().split("T")[0];
-    const [{ data: up }, { data: pa }] = await Promise.all([
-      supabase.from("reservations").select().eq("email", user.email ?? "")
-        .gte("date_reservation", today).order("date_reservation", { ascending: true }),
-      supabase.from("reservations").select().eq("email", user.email ?? "")
-        .lt("date_reservation", today).order("date_reservation", { ascending: false }).limit(10),
-    ]);
+      setProfile(profileData ?? { id: user.id, email: user.email ?? "" });
 
-    setUpcoming((up as ReservationRow[]) ?? []);
-    setPast((pa as ReservationRow[]) ?? []);
-    setLoading(false);
+      const today = new Date().toISOString().split("T")[0];
+      const [{ data: up }, { data: pa }] = await Promise.all([
+        supabase.from("reservations").select().eq("email", user.email ?? "")
+          .gte("date_reservation", today).order("date_reservation", { ascending: true }),
+        supabase.from("reservations").select().eq("email", user.email ?? "")
+          .lt("date_reservation", today).order("date_reservation", { ascending: false }).limit(10),
+      ]);
+
+      setUpcoming((up as ReservationRow[]) ?? []);
+      setPast((pa as ReservationRow[]) ?? []);
+    } catch {
+      // Erreur réseau ou Supabase → on redirige vers login
+      router.replace("/account/login");
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+    // Timeout de sécurité : si ça tourne encore après 8s, on redirige vers login
+    const timeout = setTimeout(() => {
+      setLoading((prev) => {
+        if (prev) router.replace("/account/login");
+        return false;
+      });
+    }, 8000);
+    return () => clearTimeout(timeout);
+  }, [loadData, router]);
 
   async function handleSignOut() {
     await getBrowserSupabaseClient().auth.signOut();
