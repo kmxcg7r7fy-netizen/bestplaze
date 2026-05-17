@@ -50,6 +50,7 @@ export default function AdminEventsPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -190,7 +191,11 @@ export default function AdminEventsPage() {
   }
 
   async function deleteEvent(id: string) {
-    if (!confirm("Supprimer cet événement ?")) return;
+    if (confirmDelete !== id) {
+      setConfirmDelete(id);
+      return;
+    }
+    setConfirmDelete(null);
     await fetch("/api/admin/events", {
       method: "DELETE", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
@@ -268,9 +273,20 @@ export default function AdminEventsPage() {
                     {ev.statut === "published" ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                     {ev.statut === "published" ? "Dépublier" : "Publier"}
                   </button>
-                  <button onClick={() => deleteEvent(ev.id)} className="flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/8 px-3 py-1.5 text-[12px] text-red-400 hover:bg-red-500/14">
-                    <Trash2 className="h-3.5 w-3.5" /> Supprimer
-                  </button>
+                  {confirmDelete === ev.id ? (
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => deleteEvent(ev.id)} className="flex items-center gap-1.5 rounded-xl border border-red-500/40 bg-red-500/15 px-3 py-1.5 text-[12px] text-red-400 hover:bg-red-500/22">
+                        Confirmer
+                      </button>
+                      <button onClick={() => setConfirmDelete(null)} className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] text-bp-text-2 hover:bg-white/10">
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => deleteEvent(ev.id)} className="flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/8 px-3 py-1.5 text-[12px] text-red-400 hover:bg-red-500/14">
+                      <Trash2 className="h-3.5 w-3.5" /> Supprimer
+                    </button>
+                  )}
                 </div>
               </div>
             </Card>

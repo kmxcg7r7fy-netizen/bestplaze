@@ -19,27 +19,28 @@ const CHECKLIST: { id: string; category: string; label: string }[] = [
   // Parcours client
   { id: "c1",  category: "Parcours client",  label: "Création de compte fonctionne" },
   { id: "c2",  category: "Parcours client",  label: "Connexion fonctionne" },
-  { id: "c3",  category: "Parcours client",  label: "Mot de passe oublié fonctionne" },
-  { id: "c4",  category: "Parcours client",  label: "Formulaire réservation étape 1 fonctionne" },
+  { id: "c3",  category: "Parcours client",  label: "Mot de passe oublié / lien magique fonctionne" },
+  { id: "c4",  category: "Parcours client",  label: "Formulaire réservation fonctionne" },
   { id: "c5",  category: "Parcours client",  label: "Pré-sélection cocktails fonctionne" },
   { id: "c6",  category: "Parcours client",  label: "Total estimatif se calcule correctement" },
-  { id: "c7",  category: "Parcours client",  label: "Session Stripe se crée" },
-  { id: "c8",  category: "Parcours client",  label: "Paiement test réussi → statut confirmee" },
+  { id: "c7",  category: "Parcours client",  label: "Réservation enregistrée en base" },
+  { id: "c8",  category: "Parcours client",  label: "Page succès affiche la référence" },
   { id: "c9",  category: "Parcours client",  label: "Page /account affiche la réservation" },
-  { id: "c10", category: "Parcours client",  label: "Email de confirmation reçu" },
+  { id: "c10", category: "Parcours client",  label: "Formulaire privatisation fonctionne" },
   // Parcours admin
   { id: "a1",  category: "Parcours admin",   label: "Login admin fonctionne" },
-  { id: "a2",  category: "Parcours admin",   label: "Dashboard affiche les stats" },
+  { id: "a2",  category: "Parcours admin",   label: "Dashboard affiche les stats du jour" },
   { id: "a3",  category: "Parcours admin",   label: "Réservation apparaît dans la liste" },
   { id: "a4",  category: "Parcours admin",   label: "Changement de statut fonctionne" },
-  { id: "a5",  category: "Parcours admin",   label: "Création d'événement fonctionne" },
-  { id: "a6",  category: "Parcours admin",   label: "Événement apparaît sur la page publique" },
-  { id: "a7",  category: "Parcours admin",   label: "Paramètres Stripe accessibles" },
+  { id: "a5",  category: "Parcours admin",   label: "Email de confirmation envoyé à la confirmation" },
+  { id: "a6",  category: "Parcours admin",   label: "Création d'événement fonctionne" },
+  { id: "a7",  category: "Parcours admin",   label: "Événement apparaît sur la page publique" },
+  { id: "a8",  category: "Parcours admin",   label: "Demande de privatisation visible dans l'admin" },
   // Mobile
-  { id: "m1",  category: "Mobile",           label: "Navbar hamburger fonctionne" },
-  { id: "m2",  category: "Mobile",           label: "Formulaire réservation utilisable" },
-  { id: "m3",  category: "Mobile",           label: "Carte lisible" },
-  { id: "m4",  category: "Mobile",           label: "Admin utilisable" },
+  { id: "m1",  category: "Mobile",           label: "Navigation mobile (barre du bas) fonctionne" },
+  { id: "m2",  category: "Mobile",           label: "Formulaire réservation utilisable sur mobile" },
+  { id: "m3",  category: "Mobile",           label: "Carte menu lisible sur mobile" },
+  { id: "m4",  category: "Mobile",           label: "Interface admin utilisable sur mobile" },
 ];
 
 // ─── Données test ─────────────────────────────────────────────────────────────
@@ -78,7 +79,11 @@ export default function AdminDemoPage() {
   function toggleCheck(id: string) {
     setChecked((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       localStorage.setItem("bp_demo_checklist", JSON.stringify([...next]));
       return next;
     });
@@ -304,27 +309,7 @@ export default function AdminDemoPage() {
         </Button>
       </Card>
 
-      {/* ── Section 3 : Cartes Stripe test ────────────────────────────── */}
-      <Card className="p-6 space-y-4">
-        <p className="text-[12px] uppercase tracking-[0.18em] text-bp-muted">Cartes de test Stripe</p>
-        <div className="space-y-2 text-[13px]">
-          {[
-            { label: "✅ Paiement réussi",     num: "4242 4242 4242 4242", color: "text-green-400" },
-            { label: "❌ Carte refusée",        num: "4000 0000 0000 0002", color: "text-red-400" },
-            { label: "🔐 3D Secure requis",    num: "4000 0025 0000 3155", color: "text-yellow-400" },
-          ].map(({ label, num, color }) => (
-            <div key={num} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-3">
-              <span className={color}>{label}</span>
-              <code className="font-mono text-bp-text">{num}</code>
-            </div>
-          ))}
-        </div>
-        <p className="text-[11px] text-bp-muted">
-          Date d&apos;expiration : n&apos;importe quelle date future (ex : 12/28) — CVC : n&apos;importe quels 3 chiffres
-        </p>
-      </Card>
-
-      {/* ── Section 4 : Checklist de validation ───────────────────────── */}
+      {/* ── Section 3 : Checklist de validation ───────────────────────── */}
       <Card className="p-6 space-y-5">
         <div className="flex items-center justify-between">
           <p className="text-[12px] uppercase tracking-[0.18em] text-bp-muted">Checklist de validation</p>

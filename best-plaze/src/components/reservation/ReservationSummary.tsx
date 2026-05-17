@@ -124,7 +124,7 @@ export function ReservationSummary({
             </div>
           </div>
           <p className="px-1 text-[11px] leading-relaxed text-bp-muted">
-            💳 Aucun paiement requis — ce total est purement indicatif. Le règlement s&apos;effectue uniquement sur place le soir de votre réservation.
+            Aucun paiement requis — ce total est purement indicatif. Le règlement s&apos;effectue uniquement sur place le soir de votre réservation.
           </p>
         </div>
 

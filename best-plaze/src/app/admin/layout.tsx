@@ -31,25 +31,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 }
 
 function MobileAdminNav() {
-  // Import inline to avoid RSC issues
+  const items = [
+    { href: "/admin",              label: "Stats"   },
+    { href: "/admin/reservations", label: "Résas"   },
+    { href: "/admin/events",       label: "Événem." },
+    { href: "/admin/menu",         label: "Carte"   },
+    { href: "/admin/settings",     label: "Config"  },
+    { href: "/",                   label: "Le site", newTab: true },
+  ] as const;
+
   return (
     <nav className="grid grid-cols-6 px-2 py-2">
-      {[
-        { href: "/admin",              label: "Stats",    emoji: "📊" },
-        { href: "/admin/reservations", label: "Résas",    emoji: "📅" },
-        { href: "/admin/events",       label: "Events",   emoji: "✨" },
-        { href: "/admin/menu",         label: "Carte",    emoji: "🍹" },
-        { href: "/admin/settings",     label: "Config",   emoji: "⚙️"  },
-      { href: "/",                   label: "Le site",  emoji: "🌐", newTab: true },
-      ].map((item) => (
+      {items.map((item) => (
         <a
           key={item.href}
           href={item.href}
           target={"newTab" in item && item.newTab ? "_blank" : undefined}
           rel={"newTab" in item && item.newTab ? "noopener noreferrer" : undefined}
-          className="flex flex-col items-center gap-1 py-2 text-[10px] text-bp-text-2 hover:text-bp-gold"
+          className="flex flex-col items-center gap-1 py-2 text-[10px] text-bp-text-2 hover:text-bp-gold transition"
         >
-          <span className="text-[18px] leading-none">{item.emoji}</span>
           {item.label}
         </a>
       ))}

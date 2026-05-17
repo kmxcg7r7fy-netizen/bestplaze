@@ -47,7 +47,7 @@ export default function ReservationPage() {
     }
     if (pTitle) setEventTitle(decodeURIComponent(pTitle));
 
-    void (async () => {
+    async function loadSettings() {
       try {
         const sb = getBrowserSupabaseClient();
         const { data: settings } = await sb
@@ -67,7 +67,8 @@ export default function ReservationPage() {
       } catch {
         // Pas de .env Supabase, hors ligne, ou tables absentes : la page reste utilisable.
       }
-    })();
+    }
+    loadSettings();
   }, []);
 
   // Toute la carte disponible en pré-sélection
@@ -93,7 +94,11 @@ export default function ReservationPage() {
   const toggleCat = useCallback((id: string) => {
     setOpenCats((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }, []);
@@ -144,11 +149,12 @@ export default function ReservationPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [draft]);
+  }, [draft, closedDates]);
 
   return (
     <div className="space-y-8">
       <SectionTitle
+        as="h1"
         eyebrow="Réservation"
         title="Réservez votre table"
         description="Choisissez votre créneau, votre espace, puis pré-sélectionnez boissons et tapas pour une expérience sans effort."
@@ -244,7 +250,7 @@ export default function ReservationPage() {
                     <Plus className="h-5 w-5" />
                   </Button>
                 </div>
-                <p className="text-[12px] text-bp-muted">Jusqu’à 12 personnes (V1).</p>
+                <p className="text-[12px] text-bp-muted">Jusqu’à 12 personnes. Pour les grands groupes, contactez-nous directement.</p>
               </div>
 
               <div className="space-y-2">

@@ -46,6 +46,7 @@ export default function AdminMenuPage() {
   const [modal, setModal]         = useState<ModalState>({
     open: false, mode: "create", item: EMPTY, errors: {},
   });
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   async function load() {
     setLoading(true);
     const { data } = await getBrowserSupabaseClient()
@@ -88,8 +89,12 @@ export default function AdminMenuPage() {
   }
 
   // ── Supprimer ────────────────────────────────────────────────────────────
-  async function handleDelete(id: string, nom: string) {
-    if (!window.confirm(`Supprimer « ${nom} » de la carte ?`)) return;
+  async function handleDelete(id: string) {
+    if (confirmDelete !== id) {
+      setConfirmDelete(id);
+      return;
+    }
+    setConfirmDelete(null);
     setSaving(id);
     await getBrowserSupabaseClient().from("menu_items").delete().eq("id", id);
     setItems((prev) => prev.filter((i) => i.id !== id));
@@ -266,14 +271,31 @@ export default function AdminMenuPage() {
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button
-                        onClick={() => handleDelete(item.id, item.nom)}
-                        disabled={saving === item.id}
-                        className="text-bp-muted hover:text-red-400 transition disabled:opacity-50"
-                        aria-label="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {confirmDelete === item.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="rounded-lg border border-red-500/40 bg-red-500/15 px-2 py-0.5 text-[11px] text-red-400 hover:bg-red-500/22 transition"
+                          >
+                            Oui
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="rounded-lg border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-bp-text-2 hover:bg-white/10 transition"
+                          >
+                            Non
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          disabled={saving === item.id}
+                          className="text-bp-muted hover:text-red-400 transition disabled:opacity-50"
+                          aria-label="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -146,6 +146,7 @@ export default function AccountPage() {
   return (
     <div className="space-y-8">
       <SectionTitle
+        as="h1"
         eyebrow="Espace membre"
         title="Mon compte"
         description="Retrouvez vos réservations à venir et passées."

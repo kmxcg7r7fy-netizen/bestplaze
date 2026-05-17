@@ -15,6 +15,7 @@ export default function MenuPage() {
   return (
     <div className="space-y-8">
       <SectionTitle
+        as="h1"
         eyebrow="Carte"
         title="La carte — XI BestPlaze"
         description="Cocktails 12€ · Sans alcool 9€ · Softs 6€ · Champagnes · Vins · Spiritueux"

@@ -67,8 +67,8 @@ export const brand = {
     { label: "Dimanche", value: "Fermé" },
   ],
   social: [
-    { label: "Instagram", href: "#" },
-    { label: "TikTok", href: "#" },
+    { label: "Instagram", href: "https://www.instagram.com/xibestplaze/" },
+    { label: "TikTok", href: "https://www.tiktok.com/@xibestplaze" },
   ],
   assets: {
     logoSrc: "/brand/mark.clean.png",

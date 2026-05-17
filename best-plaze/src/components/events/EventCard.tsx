@@ -46,8 +46,8 @@ function EventImg({
 }) {
   // SVG ou chemin local → <img> standard (next/image ne peut pas les optimiser)
   if (src.startsWith("/") || src.endsWith(".svg")) {
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={alt}

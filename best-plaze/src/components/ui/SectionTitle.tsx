@@ -5,11 +5,13 @@ export function SectionTitle({
   title,
   description,
   className,
+  as: Tag = "h2",
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   className?: string;
+  as?: "h1" | "h2" | "h3";
 }) {
   return (
     <div className={cn("flex flex-col gap-2", className)}>
@@ -18,9 +20,9 @@ export function SectionTitle({
           {eyebrow}
         </p>
       ) : null}
-      <h2 className="font-serif text-[24px] leading-[1.1] tracking-[-0.02em] text-bp-text sm:text-[28px]">
+      <Tag className="font-serif text-[24px] leading-[1.1] tracking-[-0.02em] text-bp-text sm:text-[28px]">
         {title}
-      </h2>
+      </Tag>
       {description ? (
         <p className="text-[15px] leading-7 text-bp-text-2">{description}</p>
       ) : null}

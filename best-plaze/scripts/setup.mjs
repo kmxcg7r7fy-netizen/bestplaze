@@ -79,7 +79,7 @@ const migRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
 
 if (!migRes || !migRes.ok) {
   // Fallback : essayer via l'API admin SQL de Supabase
-  const mgmtRes = await fetch(
+  await fetch(
     `${SUPABASE_URL.replace(".supabase.co", "")}/pg/query`.replace(
       "https://",
       "https://api.supabase.com/v1/projects/",

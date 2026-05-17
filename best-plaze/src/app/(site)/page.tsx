@@ -246,7 +246,9 @@ export default async function Home() {
                 <CalendarDays className="h-4 w-4 shrink-0 text-bp-gold" />
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.14em] text-bp-muted">Réservation</p>
-                  <p className="mt-0.5 text-[14px] text-bp-gold">Réserver une table →</p>
+                  <Link href="/reservation" className="mt-0.5 block text-[14px] text-bp-gold transition hover:text-bp-gold-2">
+                    Réserver une table →
+                  </Link>
                 </div>
               </div>
             </div>

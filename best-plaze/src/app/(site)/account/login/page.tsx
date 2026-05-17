@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Input, Label } from "@/components/ui/Input";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-type Status = "idle" | "loading" | "error";
+type Status = "idle" | "loading" | "error" | "magic_sent" | "reset_sent";
 
 export default function AccountLoginPage() {
   const router = useRouter();
@@ -60,9 +60,54 @@ export default function AccountLoginPage() {
       setStatus("error");
     } else {
       setError("");
-      setStatus("idle");
-      alert(`Un lien de connexion a été envoyé à ${email}`);
+      setStatus("magic_sent");
     }
+  }
+
+  if (status === "magic_sent") {
+    return (
+      <div className="mx-auto max-w-md space-y-8 py-16 text-center">
+        <div className="space-y-3">
+          <p className="text-[12px] uppercase tracking-[0.18em] text-bp-muted">Espace membre</p>
+          <h1 className="font-serif text-[32px] text-bp-text">Vérifiez votre email</h1>
+          <p className="text-[15px] leading-7 text-bp-text-2">
+            Un lien de connexion a été envoyé à{" "}
+            <span className="text-bp-text font-medium">{email}</span>.
+            Cliquez sur le lien pour vous connecter.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setStatus("idle")}
+          className="text-[14px] text-bp-muted underline-offset-2 hover:text-bp-text hover:underline transition"
+        >
+          Retour à la connexion
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "reset_sent") {
+    return (
+      <div className="mx-auto max-w-md space-y-8 py-16 text-center">
+        <div className="space-y-3">
+          <p className="text-[12px] uppercase tracking-[0.18em] text-bp-muted">Espace membre</p>
+          <h1 className="font-serif text-[32px] text-bp-text">Email envoyé</h1>
+          <p className="text-[15px] leading-7 text-bp-text-2">
+            Un email de réinitialisation a été envoyé à{" "}
+            <span className="text-bp-text font-medium">{email}</span>.
+            Vérifiez votre boîte de réception.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setStatus("idle")}
+          className="text-[14px] text-bp-muted underline-offset-2 hover:text-bp-text hover:underline transition"
+        >
+          Retour à la connexion
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -174,7 +219,7 @@ export default function AccountLoginPage() {
     if (authError) {
       setError(authError.message);
     } else {
-      alert(`Un email de réinitialisation a été envoyé à ${email}.`);
+      setStatus("reset_sent");
     }
   }
 }

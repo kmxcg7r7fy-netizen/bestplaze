@@ -6,6 +6,7 @@ import {
   CalendarDays,
   GlassWater,
   House,
+  Key,
   Sparkles,
   User,
 } from "lucide-react";
@@ -15,6 +16,7 @@ const items = [
   { href: "/", label: "Accueil", icon: House },
   { href: "/events", label: "Événements", icon: Sparkles },
   { href: "/menu", label: "Carte", icon: GlassWater },
+  { href: "/privatisation", label: "Privatiser", icon: Key },
   { href: "/reservation", label: "Réserver", icon: CalendarDays },
   { href: "/account", label: "Compte", icon: User },
 ] as const;
@@ -26,7 +28,7 @@ export function MobileNav() {
     <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden" aria-label="Navigation principale">
       <div className="mx-auto w-full max-w-lg px-4 pb-safe-or-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}>
         <div className="rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
-          <div className="grid grid-cols-5" role="list">
+          <div className="grid grid-cols-6" role="list">
             {items.map((it) => {
               const active =
                 it.href === "/"

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import {
-  Users, CalendarDays, Sparkles, Music, ChefHat, Shield,
+  Users, Sparkles, Music, ChefHat, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -94,6 +94,7 @@ export default function PrivatisationPage() {
   return (
     <div className="space-y-10">
       <SectionTitle
+        as="h1"
         eyebrow="Privatisation"
         title="Réservez l'espace entier"
         description="Anniversaire, soirée privée, corporate… Créez une expérience exclusive dans notre univers noir & or."
