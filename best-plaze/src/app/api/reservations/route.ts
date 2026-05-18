@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { buildReceiptEmail } from "@/lib/email/receiptTemplate";
 import type { CreateReservationBody, ReservationRow } from "@/types/reservation";
 
 function isNonEmptyString(v: unknown): v is string {
@@ -159,5 +161,33 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ reservation: data as ReservationRow }, { status: 201 });
+  const reservation = data as ReservationRow;
+
+  // ── Envoi email de réception ─────────────────────────────────────────────
+  const isRealEmail =
+    reservation.email && !reservation.email.endsWith("@noemail.bestplaze");
+
+  if (isRealEmail && process.env.RESEND_API_KEY) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const { subject, html } = buildReceiptEmail(reservation);
+      const isDev = process.env.NODE_ENV !== "production";
+      const recipient = isDev
+        ? (process.env.ADMIN_EMAIL ?? reservation.email)
+        : reservation.email;
+
+      await resend.emails.send({
+        from:    "XI BestPlaze <onboarding@resend.dev>",
+        to:      recipient,
+        replyTo: reservation.email,
+        subject,
+        html,
+      });
+    } catch (emailErr) {
+      // L'email a échoué mais l'insertion DB a réussi — on log sans bloquer
+      console.error("[Resend] Échec envoi email de réception:", emailErr);
+    }
+  }
+
+  return NextResponse.json({ reservation }, { status: 201 });
 }

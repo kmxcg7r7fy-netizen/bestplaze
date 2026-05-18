@@ -9,21 +9,25 @@ import { cn } from "@/lib/cn";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 const navItems = [
-  { href: "/admin",              label: "Dashboard",      icon: BarChart3,     devOnly: false },
-  { href: "/admin/reservations", label: "Réservations",   icon: CalendarDays,  devOnly: false },
-  { href: "/admin/events",       label: "Événements",     icon: Sparkles,      devOnly: false },
-  { href: "/admin/menu",         label: "Carte",          icon: ChefHat,       devOnly: false },
-  { href: "/admin/privatisations", label: "Privatisations", icon: Key,           devOnly: false },
-  { href: "/admin/closures",     label: "Fermetures",     icon: CalendarX,     devOnly: false },
-  { href: "/admin/settings",     label: "Paramètres",     icon: Settings,      devOnly: false },
-  { href: "/admin/demo",         label: "Mode Démo",      icon: FlaskConical,  devOnly: true  },
+  { href: "/admin",              label: "Dashboard",      icon: BarChart3,     devOnly: false, badge: false },
+  { href: "/admin/reservations", label: "Réservations",   icon: CalendarDays,  devOnly: false, badge: true  },
+  { href: "/admin/events",       label: "Événements",     icon: Sparkles,      devOnly: false, badge: false },
+  { href: "/admin/menu",         label: "Carte",          icon: ChefHat,       devOnly: false, badge: false },
+  { href: "/admin/privatisations", label: "Privatisations", icon: Key,           devOnly: false, badge: false },
+  { href: "/admin/closures",     label: "Fermetures",     icon: CalendarX,     devOnly: false, badge: false },
+  { href: "/admin/settings",     label: "Paramètres",     icon: Settings,      devOnly: false, badge: false },
+  { href: "/admin/demo",         label: "Mode Démo",      icon: FlaskConical,  devOnly: true,  badge: false },
 ] as const;
 
 const IS_DEV = process.env.NODE_ENV !== "production";
 /** Affiche « Mode Démo » en dev, ou en prod si NEXT_PUBLIC_ADMIN_DEMO=true (rebuild requis). */
 const SHOW_DEMO = IS_DEV || process.env.NEXT_PUBLIC_ADMIN_DEMO === "true";
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  pendingCount?: number;
+}
+
+export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -49,12 +53,13 @@ export function AdminSidebar() {
               ? pathname === "/admin"
               : pathname.startsWith(item.href);
           const Icon = item.icon;
+          const showBadge = item.badge && pendingCount > 0;
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] transition",
+                "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] transition",
                 active
                   ? "bg-bp-gold/12 text-bp-gold"
                   : "text-bp-text-2 hover:bg-white/6 hover:text-bp-text",
@@ -62,7 +67,15 @@ export function AdminSidebar() {
               aria-current={active ? "page" : undefined}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {showBadge && (
+                <span
+                  className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-none text-white"
+                  aria-label={`${pendingCount} réservation${pendingCount > 1 ? "s" : ""} en attente`}
+                >
+                  {pendingCount > 99 ? "99+" : pendingCount}
+                </span>
+              )}
             </Link>
           );
         })}

@@ -1,13 +1,29 @@
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const metadata = { title: { default: "Admin", template: "%s · Admin XI BestPlaze" } };
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+async function getPendingCount(): Promise<number> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { count } = await supabase
+      .from("reservations")
+      .select("id", { count: "exact", head: true })
+      .eq("statut", "en_attente");
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pendingCount = await getPendingCount();
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar desktop */}
       <div className="hidden w-56 shrink-0 md:flex md:flex-col">
-        <AdminSidebar />
+        <AdminSidebar pendingCount={pendingCount} />
       </div>
 
       {/* Contenu */}
