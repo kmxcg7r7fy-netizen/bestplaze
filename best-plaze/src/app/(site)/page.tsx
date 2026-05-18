@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock, MapPin } from "lucide-react";
-import { EventCard, type EventDisplay } from "@/components/events/EventCard";
+import { type EventDisplay } from "@/components/events/EventCard";
+import { HomepageEvents } from "@/components/events/HomepageEvents";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { MapEmbed } from "@/components/map/MapEmbed";
@@ -20,9 +21,8 @@ async function getLiveEvents(): Promise<EventDisplay[]> {
       .select("id, titre, description, date, heure_debut, type, dress_code, a_la_une, prix_entree, image_url")
       .eq("statut", "published")
       .gte("date", today)
-      .order("a_la_une", { ascending: false })
-      .order("date",     { ascending: true })
-      .limit(4);
+      .order("date", { ascending: true })
+      .limit(10);
     if (data && data.length > 0) {
       return data.map((e) => ({
         id:          e.id,
@@ -60,7 +60,7 @@ function Divider() {
 export default async function Home() {
   const liveEvents = await getLiveEvents();
 
-  const allEvents: EventDisplay[] =
+  const rawEvents: EventDisplay[] =
     liveEvents.length > 0
       ? liveEvents
       : mockEvents.map((e) => ({
@@ -76,8 +76,9 @@ export default async function Home() {
           prix:        null,
         }));
 
-  const featured   = allEvents.find((e) => e.highlight) ?? allEvents[0];
-  const nextEvents = allEvents.filter((e) => e.id !== featured?.id).slice(0, 3);
+  // Trier par date croissante (le composant client fera aussi ce tri, mais on le passe déjà trié)
+  const allEvents = [...rawEvents].sort((a, b) => (a.dateISO ?? "").localeCompare(b.dateISO ?? ""));
+
   const cocktails  = menuItems.filter((x) => x.category === "Cocktails").slice(0, 6);
 
   return (
@@ -116,42 +117,12 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 2. ÉVÉNEMENT À LA UNE ─────────────────────────────────────────── */}
-      {featured && (
+      {/* ── 2 & 3. ÉVÉNEMENTS (à la une + à venir + filtre catégorie) ──────── */}
+      {allEvents.length > 0 && (
         <>
           <Divider />
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">
-                À l&apos;affiche
-              </p>
-              <Link href="/events" className="flex items-center gap-1 text-[13px] text-bp-muted transition hover:text-bp-text">
-                Toutes les soirées <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            <EventCard event={featured} mode="poster" priority />
-          </section>
-        </>
-      )}
-
-      {/* ── 3. PROCHAINES SOIRÉES ─────────────────────────────────────────── */}
-      {nextEvents.length > 0 && (
-        <>
-          <Divider />
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-bp-gold">
-                À venir
-              </p>
-              <Link href="/events" className="flex items-center gap-1 text-[13px] text-bp-muted transition hover:text-bp-text">
-                Voir tout <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            <div className={`grid gap-5 ${nextEvents.length >= 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}>
-              {nextEvents.map((e) => (
-                <EventCard key={e.id} event={e} mode="grid" />
-              ))}
-            </div>
+          <section className="space-y-6">
+            <HomepageEvents events={allEvents} />
           </section>
         </>
       )}

@@ -37,7 +37,7 @@ const STATUT_MAP: Record<string, { label: string; variant: "gold" | "soft" | "ou
 
 type Profile = {
   id: string; email: string;
-  prenom?: string; nom?: string; telephone?: string; is_vip?: boolean;
+  prenom?: string; nom?: string; is_vip?: boolean;
 };
 
 // ─── ReservationCard ──────────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ export default function AccountPage() {
 
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, email, prenom, nom, telephone, is_vip")
+        .select("id, email, prenom, nom, is_vip")
         .eq("id", user.id)
         .single();
 
@@ -165,7 +165,6 @@ export default function AccountPage() {
                 </p>
               )}
               <p className="truncate text-[13px] text-bp-text-2">{profile.email}</p>
-              {profile.telephone && <p className="text-[13px] text-bp-muted">{profile.telephone}</p>}
             </div>
           </div>
           {profile.is_vip && <div className="mt-3"><Badge variant="gold">Client VIP</Badge></div>}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader, Search, RefreshCw } from "lucide-react";
+import { Loader, Search, RefreshCw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -25,14 +25,27 @@ const STATUT_NEXT: Record<string, { label: string; value: string }[]> = {
   confirmee:  [{ label: "Terminée", value: "terminee" }, { label: "No-show", value: "no_show" }, { label: "Annuler", value: "annulee" }],
 };
 
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export default function AdminReservationsPage() {
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
   const [filtered, setFiltered]         = useState<ReservationRow[]>([]);
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState("");
   const [statut, setStatut]             = useState<string>("Tous");
+  const [dateFilter, setDateFilter]     = useState<string>("");
   const [updating, setUpdating]         = useState<string | null>(null);
   const [selected, setSelected]         = useState<ReservationRow | null>(null);
+
+  // Inline confirmations
+  const [deleteConfirmId, setDeleteConfirmId]       = useState<string | null>(null);
+  const [showBulkConfirm, setShowBulkConfirm]       = useState(false);
+  const [deleting, setDeleting]                     = useState(false);
+
+  const totalCA = filtered.reduce((s, r) => s + (r.total_estimatif ?? 0), 0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,6 +66,7 @@ export default function AdminReservationsPage() {
   useEffect(() => {
     let list = reservations;
     if (statut !== "Tous") list = list.filter((r) => r.statut === statut);
+    if (dateFilter) list = list.filter((r) => r.date_reservation === dateFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((r) =>
@@ -61,7 +75,7 @@ export default function AdminReservationsPage() {
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFiltered(list);
-  }, [reservations, statut, search]);
+  }, [reservations, statut, search, dateFilter]);
 
   async function changeStatut(id: string, newStatut: string) {
     setUpdating(id);
@@ -77,15 +91,100 @@ export default function AdminReservationsPage() {
     setUpdating(null);
   }
 
+  async function deleteReservation(id: string) {
+    setDeleting(true);
+    await fetch(`/api/reservations/${id}`, { method: "DELETE" });
+    setReservations((prev) => prev.filter((r) => r.id !== id));
+    if (selected?.id === id) setSelected(null);
+    setDeleteConfirmId(null);
+    setDeleting(false);
+  }
+
+  async function deletePastReservations() {
+    setDeleting(true);
+    const today = todayISO();
+    const past = reservations.filter((r) => r.date_reservation < today);
+    await Promise.all(
+      past.map((r) => fetch(`/api/reservations/${r.id}`, { method: "DELETE" })),
+    );
+    setReservations((prev) => prev.filter((r) => r.date_reservation >= today));
+    setShowBulkConfirm(false);
+    setDeleting(false);
+  }
+
   function formatDate(iso: string) {
     return new Date(iso + "T00:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
   }
+
+  const pastCount = reservations.filter((r) => r.date_reservation < todayISO()).length;
 
   return (
     <div className="space-y-6">
       <SectionTitle eyebrow="Administration" title="Réservations" />
 
-      {/* Filtres */}
+      {/* Barre d'outils haute */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Filtre par date */}
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-[13px] text-bp-text focus:outline-none focus:border-bp-gold/40"
+          />
+          <button
+            onClick={() => setDateFilter(todayISO())}
+            className={`rounded-full px-3 py-1.5 text-[12px] transition border ${
+              dateFilter === todayISO()
+                ? "border-bp-gold/30 bg-bp-gold/15 text-bp-gold"
+                : "border-white/10 bg-white/4 text-bp-text-2 hover:bg-white/8"
+            }`}
+          >
+            Aujourd&apos;hui
+          </button>
+          {dateFilter && (
+            <button
+              onClick={() => setDateFilter("")}
+              className="rounded-full px-3 py-1.5 text-[12px] border border-white/10 bg-white/4 text-bp-text-2 hover:bg-white/8 transition"
+            >
+              Toutes les dates
+            </button>
+          )}
+        </div>
+
+        {/* Supprimer les réservations passées */}
+        <div className="flex items-center gap-2">
+          {!showBulkConfirm ? (
+            <button
+              disabled={pastCount === 0}
+              onClick={() => setShowBulkConfirm(true)}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] border border-red-500/20 bg-red-500/8 text-red-400 hover:bg-red-500/16 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Supprimer les réservations passées{pastCount > 0 ? ` (${pastCount})` : ""}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 rounded-2xl border border-red-500/25 bg-red-500/10 px-3 py-1.5">
+              <span className="text-[12px] text-red-400">Supprimer {pastCount} réservation{pastCount > 1 ? "s" : ""} passée{pastCount > 1 ? "s" : ""} ?</span>
+              <button
+                disabled={deleting}
+                onClick={deletePastReservations}
+                className="rounded-xl bg-red-500/20 px-2.5 py-1 text-[11px] text-red-400 hover:bg-red-500/30 transition disabled:opacity-50"
+              >
+                {deleting ? "…" : "Confirmer"}
+              </button>
+              <button
+                onClick={() => setShowBulkConfirm(false)}
+                className="text-[11px] text-bp-muted hover:text-bp-text transition"
+              >
+                Annuler
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Filtres statut + recherche */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-bp-muted" />
@@ -116,6 +215,16 @@ export default function AdminReservationsPage() {
         </Button>
       </div>
 
+      {/* CA total */}
+      {!loading && filtered.length > 0 && totalCA > 0 && (
+        <p className="text-[13px] text-bp-text-2">
+          CA total estimatif (sélection) :{" "}
+          <span className="font-medium text-bp-gold">
+            {totalCA.toLocaleString("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })}
+          </span>
+        </p>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader className="h-7 w-7 animate-spin text-bp-gold" />
@@ -127,7 +236,7 @@ export default function AdminReservationsPage() {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-white/8 bg-black/20">
-                {["Date", "Heure", "Client", "Pers.", "Espace", "Statut", "Paiement", "Actions"].map((h) => (
+                {["Date", "Heure", "Client", "Pers.", "Espace", "Statut", "Paiement", "Actions", ""].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-bp-muted font-normal whitespace-nowrap">
                     {h}
                   </th>
@@ -136,44 +245,74 @@ export default function AdminReservationsPage() {
             </thead>
             <tbody>
               {filtered.map((r, i) => (
-                <tr
-                  key={r.id}
-                  className={`cursor-pointer border-b border-white/5 transition hover:bg-white/4 ${i % 2 === 0 ? "" : "bg-black/10"}`}
-                  onClick={() => setSelected(r)}
-                >
-                  <td className="px-4 py-3 whitespace-nowrap text-bp-text">{formatDate(r.date_reservation)}</td>
-                  <td className="px-4 py-3 font-serif text-bp-gold">{r.heure}</td>
-                  <td className="px-4 py-3">
-                    <p className="text-bp-text">{r.prenom} {r.nom}</p>
-                    <p className="text-[11px] text-bp-muted">{r.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-bp-text-2">{r.nb_personnes}</td>
-                  <td className="px-4 py-3 text-bp-text-2">{r.espace}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={STATUT_VARIANT[r.statut] ?? "soft"}>
-                      {STATUT_LABEL[r.statut] ?? r.statut}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={r.stripe_payment_status === "paid" ? "gold" : "outline"}>
-                      {r.stripe_payment_status === "paid" ? "Payé" : "Non payé"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-1">
-                      {(STATUT_NEXT[r.statut] ?? []).map((action) => (
+                <>
+                  <tr
+                    key={r.id}
+                    className={`cursor-pointer border-b border-white/5 transition hover:bg-white/4 ${i % 2 === 0 ? "" : "bg-black/10"}`}
+                    onClick={() => setSelected(r)}
+                  >
+                    <td className="px-4 py-3 whitespace-nowrap text-bp-text">{formatDate(r.date_reservation)}</td>
+                    <td className="px-4 py-3 font-serif text-bp-gold">{r.heure}</td>
+                    <td className="px-4 py-3">
+                      <p className="text-bp-text">{r.prenom} {r.nom}</p>
+                      <p className="text-[11px] text-bp-muted">{r.email}</p>
+                    </td>
+                    <td className="px-4 py-3 text-bp-text-2">{r.nb_personnes}</td>
+                    <td className="px-4 py-3 text-bp-text-2">{r.espace}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={STATUT_VARIANT[r.statut] ?? "soft"}>
+                        {STATUT_LABEL[r.statut] ?? r.statut}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant={r.stripe_payment_status === "paid" ? "gold" : "outline"}>
+                        {r.stripe_payment_status === "paid" ? "Payé" : "Non payé"}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-1">
+                        {(STATUT_NEXT[r.statut] ?? []).map((action) => (
+                          <button
+                            key={action.value}
+                            disabled={updating === r.id}
+                            onClick={() => changeStatut(r.id, action.value)}
+                            className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-[12px] text-bp-text-2 transition hover:bg-white/12 disabled:opacity-50"
+                          >
+                            {updating === r.id ? "…" : action.label}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                    {/* Bouton poubelle */}
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      {deleteConfirmId === r.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            disabled={deleting}
+                            onClick={() => deleteReservation(r.id)}
+                            className="rounded-xl bg-red-500/20 px-2.5 py-1.5 text-[11px] text-red-400 hover:bg-red-500/30 transition disabled:opacity-50"
+                          >
+                            {deleting ? "…" : "Supprimer"}
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmId(null)}
+                            className="text-[11px] text-bp-muted hover:text-bp-text transition"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
                         <button
-                          key={action.value}
-                          disabled={updating === r.id}
-                          onClick={() => changeStatut(r.id, action.value)}
-                          className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-[12px] text-bp-text-2 transition hover:bg-white/12 disabled:opacity-50"
+                          onClick={() => setDeleteConfirmId(r.id)}
+                          className="rounded-xl border border-white/8 bg-white/4 p-1.5 text-bp-muted hover:border-red-500/25 hover:bg-red-500/10 hover:text-red-400 transition"
+                          title="Supprimer"
                         >
-                          {updating === r.id ? "…" : action.label}
+                          <Trash2 className="h-4 w-4" />
                         </button>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
+                      )}
+                    </td>
+                  </tr>
+                </>
               ))}
             </tbody>
           </table>
@@ -203,7 +342,6 @@ export default function AdminReservationsPage() {
                 ["Personnes",  String(selected.nb_personnes)],
                 ["Espace",     selected.espace],
                 ["Email",      selected.email],
-                ["Téléphone",  selected.telephone || "—"],
                 ["Occasion",   selected.occasion || "—"],
                 ["Paiement",   selected.stripe_payment_status === "paid" ? `Payé — ${selected.montant_paye}€` : "Non payé"],
               ].map(([k, v]) => (

@@ -13,7 +13,7 @@ import { registerSchema } from "@/lib/validations";
 export default function AccountRegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    prenom: "", nom: "", email: "", telephone: "", password: "", confirmPassword: "",
+    prenom: "", nom: "", email: "", password: "", confirmPassword: "",
   });
   const [showPwd, setShowPwd]   = useState(false);
   const [status, setStatus]     = useState<"idle" | "loading" | "success">("idle");
@@ -51,7 +51,6 @@ export default function AccountRegisterPage() {
         data: {
           prenom:    form.prenom.trim(),
           nom:       form.nom.trim(),
-          telephone: form.telephone.trim(),
         },
       },
     });
@@ -66,15 +65,14 @@ export default function AccountRegisterPage() {
       return;
     }
 
-    // Mettre à jour le profil avec prenom/nom/telephone
+    // Mettre à jour le profil avec prenom/nom
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from("profiles").upsert({
-        id:        user.id,
-        email:     form.email.trim().toLowerCase(),
-        prenom:    form.prenom.trim(),
-        nom:       form.nom.trim(),
-        telephone: form.telephone.trim() || null,
+        id:     user.id,
+        email:  form.email.trim().toLowerCase(),
+        prenom: form.prenom.trim(),
+        nom:    form.nom.trim(),
       });
     }
 
@@ -137,16 +135,6 @@ export default function AccountRegisterPage() {
               autoComplete="email"
               value={form.email}
               onChange={(e) => update("email", e.target.value)}
-            />
-          </Field>
-
-          <Field label="Téléphone" error={errors.telephone}>
-            <Input
-              inputMode="tel"
-              placeholder="07 68 62 73 19"
-              autoComplete="tel"
-              value={form.telephone}
-              onChange={(e) => update("telephone", e.target.value)}
             />
           </Field>
 

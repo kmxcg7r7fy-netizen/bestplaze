@@ -40,7 +40,6 @@ export const registerSchema = z.object({
   prenom:           z.string().min(1, "Prénom requis").max(50),
   nom:              z.string().min(1, "Nom requis").max(50),
   email:            z.email("Email invalide"),
-  telephone:        z.string().min(8, "Téléphone invalide").max(20).optional().or(z.literal("")),
   password:         z.string().min(8, "8 caractères minimum"),
   confirmPassword:  z.string(),
 }).refine((d) => d.password === d.confirmPassword, {

@@ -111,3 +111,24 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   return NextResponse.json({ reservation });
 }
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  const { id } = await context.params;
+
+  if (!id || !uuidRe.test(id)) {
+    return NextResponse.json({ error: "Identifiant UUID invalide" }, { status: 400 });
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const { error } = await supabase
+    .from("reservations")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
