@@ -1,7 +1,7 @@
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-export const metadata = { title: { default: "Admin · XI BestPlaze", template: "%s — XI BestPlaze Admin" } };
+export const metadata = { title: { default: "XI BestPlaze — Admin", template: "%s · Admin" } };
 
 async function getPendingCount(): Promise<number> {
   try {
