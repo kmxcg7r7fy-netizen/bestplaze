@@ -74,21 +74,24 @@ export default function ReservationPage() {
         const sb = getBrowserSupabaseClient();
         const { data: { user } } = await sb.auth.getUser();
         if (!user) return;
+
+        // Métadonnées Supabase Auth (disponibles sans requête DB)
+        const meta = user.user_metadata ?? {};
+        const metaFirst = (meta.prenom ?? meta.first_name ?? meta.given_name ?? "").trim();
+        const metaLast  = (meta.nom   ?? meta.last_name  ?? meta.family_name ?? "").trim();
+
         const { data: profile } = await sb
           .from("profiles")
           .select("prenom, nom, email")
           .eq("id", user.id)
           .single();
-        if (profile) {
-          setDraft((d) => ({
-            ...d,
-            firstName: d.firstName || profile.prenom || "",
-            lastName:  d.lastName  || profile.nom   || "",
-            email:     d.email     || profile.email  || user.email || "",
-          }));
-        } else if (user.email) {
-          setDraft((d) => ({ ...d, email: d.email || user.email || "" }));
-        }
+
+        setDraft((d) => ({
+          ...d,
+          firstName: d.firstName || profile?.prenom || metaFirst || "",
+          lastName:  d.lastName  || profile?.nom    || metaLast  || "",
+          email:     d.email     || profile?.email   || user.email || "",
+        }));
       } catch {
         // Utilisateur non connecté ou erreur réseau — le formulaire reste utilisable.
       }
