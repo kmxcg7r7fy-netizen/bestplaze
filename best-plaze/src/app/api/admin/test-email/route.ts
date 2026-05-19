@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { data, error } = await resend.emails.send({
-      from:    "XI BestPlaze <onboarding@resend.dev>",
+      from:    "XI BestPlaze <noreply@bestplaze.fr>",
       to:      process.env.ADMIN_EMAIL ?? "test@example.com",
       subject: "✅ Test email — XI BestPlaze fonctionne",
       html:    "<p>Si tu reçois cet email, Resend est correctement configuré sur BestPlaze 🎉</p>",

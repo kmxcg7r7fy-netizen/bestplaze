@@ -88,16 +88,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const { subject, html } = buildConfirmationEmail(reservation);
-        // En mode test Resend (onboarding@resend.dev), les emails
-        // ne peuvent être envoyés qu'à l'adresse du compte Resend.
-        const isDev = process.env.NODE_ENV !== "production";
-        const recipient = isDev
-          ? (process.env.ADMIN_EMAIL ?? reservation.email)
-          : reservation.email;
-
         await resend.emails.send({
-          from:    "XI BestPlaze <onboarding@resend.dev>",
-          to:      recipient,
+          from:    "XI BestPlaze <noreply@bestplaze.fr>",
+          to:      reservation.email,
           replyTo: reservation.email,
           subject,
           html,

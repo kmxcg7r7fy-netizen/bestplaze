@@ -177,7 +177,7 @@ export async function POST(request: Request) {
         : reservation.email;
 
       await resend.emails.send({
-        from:    "XI BestPlaze <onboarding@resend.dev>",
+        from:    "XI BestPlaze <noreply@bestplaze.fr>",
         to:      recipient,
         replyTo: reservation.email,
         subject,
